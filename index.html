@@ -111,8 +111,10 @@
 
 <div id="start"><canvas id="poster"></canvas><div id="startText"><h1>Il Mondo di Eliana</h1><p>tocca per entrare</p></div></div>
 
-<!-- contenuto editabile (personaggi, scenari, forme, lingue) -->
+<!-- contenuto editabile (lingue, personaggi, scenari, forme) -->
 <script src="i18n.js"></script>
+<script src="locales/it-IT.js"></script>
+<script src="locales/en-US.js"></script>
 <script src="characters.js"></script>
 <script src="environments.js"></script>
 <script src="creatures.js"></script>
@@ -126,9 +128,9 @@
 //    • creatures.js     → le forme dei corpi (drawCreature)
 //  Questo file = impianto: audio, movimento, orologio, render, loop.
 //  ponytail: zero dipendenze, audio sintetizzato, canvas 2D.
-//  (CAST, BYID, INFO, ENVS, curEnv, drawCreature arrivano dai file sopra.)
+//  (CAST, BYID, ENVS, curEnv, drawCreature, I18N/L/charInfo arrivano dai file sopra.)
 // ═══════════════════════════════════════════════════════════════════
-const APP_VERSION = 'v1.2';
+const APP_VERSION = 'v1.3';
 
 // ── CANVAS ─────────────────────────────────────────────────────────
 const cv = document.getElementById('stage'); let ctx = cv.getContext('2d');
@@ -605,6 +607,7 @@ document.getElementById('start').addEventListener('click',()=>{
 
 // ── applica le stringhe della lingua attiva alla UI statica ───────
 function applyI18n(){
+  initI18n();   // risolve LANG + L ora che i locales sono registrati
   document.documentElement.lang=LANG;
   const st=document.getElementById('startText');
   if(st){ st.querySelector('p').textContent=L.enter; } // h1 resta "Il Mondo di Eliana" (titolo/nome)
@@ -613,7 +616,7 @@ function applyI18n(){
   document.getElementById('infoBtn').title=L.friends;
   phaseMenu.querySelectorAll('button').forEach(b=>{ b.textContent=L.phases[b.dataset.ph]||b.textContent; });
 }
-document.getElementById('langBtn').addEventListener('click',()=> setLang(LANG==='it'?'en':'it'));
+document.getElementById('langBtn').addEventListener('click',()=> cycleLang());
 applyI18n();
 
 // disegna il poster all'avvio (e lo ridisegna se ruoti/ridimensioni prima di entrare)
