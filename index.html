@@ -631,11 +631,13 @@ function pickVoice(lang){
 }
 function sayTime(){
   const txt=timeSentence();
-  clockSpeech.textContent=txt; clockSpeech.hidden=false;
-  if(window.speechSynthesis){ speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(txt); u.lang=LANG; u.rate=0.9;
-    const v=pickVoice(LANG); if(v) u.voice=v;   // voce nella lingua giusta (non la default EN)
-    speechSynthesis.speak(u); }
+  clockSpeech.textContent=txt; clockSpeech.hidden=false;   // il fumetto scritto c'è sempre
+  const v=pickVoice(LANG);
+  if(window.speechSynthesis && v){                          // parla SOLO se c'è la voce giusta
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt); u.lang=LANG; u.rate=0.9; u.voice=v;
+    speechSynthesis.speak(u);
+  }
   clearTimeout(sayTime._t); sayTime._t=setTimeout(()=>{ clockSpeech.hidden=true; }, 5000);
 }
 document.getElementById('owlHelper').addEventListener('click',e=>{ e.stopPropagation(); sayTime(); });
