@@ -22,8 +22,6 @@
   .chip canvas { width:38px; height:38px; }
   .chip span { white-space:nowrap; opacity:.85; }
   #top { position:fixed; top:12px; left:12px; right:12px; display:flex; align-items:center; gap:12px; z-index:5; }
-  #day { flex:1; accent-color:#e8443a; max-width:340px; }
-  #label { font-size:13px; opacity:.8; min-width:78px; }
   #env { display:flex; gap:6px; }
   .envbtn { border:none; border-radius:10px; padding:5px 9px; font-size:12px; cursor:pointer;
     background:rgba(255,255,255,.08); color:#cfe0f0; }
@@ -55,15 +53,14 @@
   #infoTable .nm { font-weight:600; color:#eaf2fb; }
   #infoTable .tp { font-size:11px; color:#8fb2d8; }
   #infoTable .ds { font-size:12px; opacity:.8; line-height:1.35; }
-  #clockModal { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
-    background:rgba(4,10,18,.6); backdrop-filter:blur(4px); padding:16px; }
-  #clockCard { position:relative; background:#0f2136; border:1px solid rgba(255,255,255,.12);
-    border-radius:20px; padding:22px; display:flex; flex-direction:column; align-items:center; gap:12px;
-    box-shadow:0 20px 60px rgba(0,0,0,.5); }
-  #clockClose { position:absolute; top:10px; right:10px; border:none; background:rgba(255,255,255,.08);
-    color:#cfe0f0; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; }
-  #clockCanvas { width:min(74vw,320px); height:min(74vw,320px); }
-  #clockDigital { font-size:26px; font-weight:700; letter-spacing:2px; color:#eaf2fb; font-variant-numeric:tabular-nums; }
+  #clockCanvas { position:fixed; left:10px; bottom:74px; z-index:6; width:min(40vw,190px); height:auto;
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,.4)); pointer-events:none; }
+  #phaseMenu { position:fixed; left:10px; bottom:74px; z-index:22; display:flex; flex-direction:column; gap:4px;
+    background:rgba(15,33,54,.96); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:6px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  #phaseMenu button { border:none; background:rgba(255,255,255,.06); color:#dfeaf5; text-align:left;
+    padding:8px 12px; border-radius:8px; cursor:pointer; font-size:13px; white-space:nowrap; }
+  #phaseMenu button.on { background:rgba(232,68,58,.4); }
   #start { position:fixed; inset:0; z-index:10; cursor:pointer; overflow:hidden;
     transition:opacity .9s ease; }
   #poster { position:absolute; inset:0; width:100%; height:100%; display:block;
@@ -82,9 +79,6 @@
 <canvas id="stage"></canvas>
 
 <div id="top" hidden>
-  <button id="clockBtn" title="Che ore sono?">🕒 <span id="clockTime">--:--</span></button>
-  <span id="label">🌞 Giorno</span>
-  <input id="day" type="range" min="0" max="100" value="20" aria-label="Ora del giorno">
   <div id="env"></div>
   <button id="clear" title="Svuota">🧹</button>
   <button id="infoBtn" title="Gli amici" aria-label="Info">ⓘ</button>
@@ -101,91 +95,36 @@
   </div>
 </div>
 
-<div id="clockModal" hidden>
-  <div id="clockCard">
-    <button id="clockClose" aria-label="Chiudi">✕</button>
-    <canvas id="clockCanvas" width="320" height="320"></canvas>
-    <div id="clockDigital">--:--</div>
-  </div>
+<canvas id="clockCanvas" width="440" height="300" hidden></canvas>
+<div id="phaseMenu" hidden>
+  <button data-ph="alba">🌅 Alba</button>
+  <button data-ph="giorno">🌞 Giorno</button>
+  <button data-ph="tramonto">🌇 Tramonto</button>
+  <button data-ph="notte">🌙 Notte</button>
+  <button data-ph="auto">🕒 Auto (ora reale)</button>
 </div>
 
 <div id="palette" hidden></div>
 
 <div id="start"><canvas id="poster"></canvas><div id="startText"><h1>Il Mondo di Eliana</h1><p>tocca per entrare</p></div></div>
 
+<!-- contenuto editabile (personaggi, scenari, forme) -->
+<script src="characters.js"></script>
+<script src="environments.js"></script>
+<script src="creatures.js"></script>
+<!-- motore -->
 <script>
 // ═══════════════════════════════════════════════════════════════════
-//  IL MONDO DI ELIANA — v1 (2D canvas + Web Audio procedurale)
-//  Cast reale dal libro "Paws, Purrs and Tales 2026" (personaggi di Eliana).
-//  Stile: forme geometriche stilizzate (à la murmur.living), NON le immagini del libro.
-//  Personalità = 5 attributi (forma via species, colore, velocità, movimento, suono).
-//  Notte → i personaggi DORMONO (solo ambiente).
-//  ponytail: 1 file, zero dipendenze, audio sintetizzato.
+//  IL MONDO DI ELIANA — motore (v1.1, modulare)
+//  Contenuto editabile in file separati:
+//    • characters.js    → i personaggi (aggiungi/modifica gli amici)
+//    • environments.js  → gli scenari (laghetto/foresta/…)
+//    • creatures.js     → le forme dei corpi (drawCreature)
+//  Questo file = impianto: audio, movimento, orologio, render, loop.
+//  ponytail: zero dipendenze, audio sintetizzato, canvas 2D.
+//  (CAST, BYID, INFO, ENVS, curEnv, drawCreature arrivano dai file sopra.)
 // ═══════════════════════════════════════════════════════════════════
-
-// ── CAST: personaggi canonici (colori/carattere dal libro) ─────────
-// motion: wander|float|dart|hop|crawl   sound:{type,base,rate(ev/s)}
-// species → silhouette. colors[0]=corpo, [1]=accento, [2]=extra.
-const CAST = [
-  {id:'maddalena', name:'Maddalena', species:'cat',   colors:['#e8443a','#ffd7a0'], size:32, speed:0.75, motion:'hop',   sound:{type:'triangle',base:210,rate:0.28}, env:'casa'},
-  {id:'catto',     name:'Catto',     species:'cat',   colors:['#5aa9ff','#dff0ff'], size:15, speed:0.5,  motion:'dart',  sound:{type:'sine',    base:520,rate:0.16}, env:'casa'},
-  {id:'gallo',     name:'Gallo',     species:'cat',   colors:['#9b6a44','#e8443a','#4f8bff'], size:22, speed:0.4, motion:'wander', sound:{type:'sawtooth',base:300,rate:0.2}, env:'acqua'},
-  {id:'ciuffo',    name:'Ciuffo',    species:'horse', colors:['#e0662f','#c23b2a','#b98a52'], size:32, speed:0.8, motion:'dart', sound:{type:'sawtooth',base:180,rate:0.14}, env:'spiaggia'},
-  {id:'ciuffa',    name:'Ciuffa',    species:'horse', colors:['#eef0f5','#ffe27a','#7fb2ff'], size:32, speed:0.72, motion:'wander', sound:{type:'sawtooth',base:200,rate:0.14}, env:'spiaggia'},
-  {id:'grunt',     name:'Grunt',     species:'gorilla',colors:['#4f7fe0','#bcd2ff'], size:36, speed:0.5,  motion:'hop',   sound:{type:'square',  base:120,rate:0.2},  env:'casa'},
-  {id:'henry',     name:'Henry',     species:'hedgehog',colors:['#8a6a4a','#d8b088'], size:13, speed:0.62, motion:'dart', sound:{type:'square',  base:1100,rate:0.22},env:'parco'},
-  {id:'peppa',     name:'Peppa',     species:'squirrel',colors:['#7fb2ff','#ff9ecb'], size:14, speed:0.55, motion:'hop', sound:{type:'sine',    base:800,rate:0.2},  env:'foresta'},
-  {id:'tinto',     name:'Tinto',     species:'squirrel',colors:['#6fd06f','#4f8bff'], size:14, speed:0.55, motion:'hop', sound:{type:'sine',    base:760,rate:0.2},  env:'foresta'},
-  {id:'tutti',     name:'Tutti',     species:'croc',   colors:['#ffd23a','#e0b020'], size:30, speed:0.24, motion:'wander', sound:{type:'sine',  base:150,rate:0.1},  env:'acqua'},
-  {id:'jugi',      name:'Jugi',      species:'dog',    colors:['#d63a3a','#ffd0d0'], size:20, speed:0.52, motion:'hop',  sound:{type:'square',  base:340,rate:0.2},  env:'casa'},
-  {id:'jugetta',   name:'Jugetta',   species:'dog',    colors:['#8fd0ff','#eaf6ff'], size:20, speed:0.46, motion:'wander', sound:{type:'square',base:400,rate:0.2}, env:'casa'},
-  {id:'caterina',  name:'Caterina',  species:'wolf',   colors:['#4f7fe0','#e8443a'], size:24, speed:0.62, motion:'dart', sound:{type:'sawtooth',base:260,rate:0.14},env:'foresta'},
-  {id:'tata',      name:'Tata',      species:'wolf',   colors:['#e0662f','#ffd23a','#9b6a44'], size:22, speed:0.5, motion:'hop', sound:{type:'triangle',base:220,rate:0.16},env:'foresta'},
-  {id:'giacomo',   name:'Giacomo',   species:'caterpillar',colors:['#ff5a5a','#ffd23a','#6fd06f','#7fb2ff'], size:16, speed:0.3, motion:'crawl', sound:{type:'sine',base:600,rate:0.08},env:'casa'},
-  {id:'george',    name:'George',    species:'monkey', colors:['#ffd23a','#e0902f'], size:14, speed:0.5,  motion:'hop',  sound:{type:'triangle',base:700,rate:0.18},env:'casa'},
-  {id:'poppy',     name:'Poppy',     species:'monkey', colors:['#e8443a','#e0902f'], size:14, speed:0.35, motion:'float',sound:{type:'sine',   base:640,rate:0.12},env:'casa'},
-  {id:'momo',      name:'Momo',      species:'owl',    colors:['#b98a52','#ffe27a'], size:22, speed:0.3,  motion:'float',sound:{type:'sine',   base:340,rate:0.14},env:'foresta'},
-  {id:'jack',      name:'Jack',      species:'dog',    colors:['#9a5ad6','#e0c0ff'], size:20, speed:0.5,  motion:'dart', sound:{type:'sawtooth',base:280,rate:0.18},env:'casa'},
-  {id:'patpat',    name:'Patpat',    species:'bear',   colors:['#efe0c8','#d8c5a0'], size:32, speed:0.2,  motion:'wander',sound:{type:'sine',   base:180,rate:0.08},env:'casa'},
-  {id:'frullato',  name:'Frullato',  species:'cow',    colors:['#f2e9d8','#d8b8a0'], size:24, speed:0.3,  motion:'float',sound:{type:'sine',   base:240,rate:0.1}, env:'casa'},
-];
-const BYID = Object.fromEntries(CAST.map(c=>[c.id,c]));
-
-// ── INFO: tipo (IT) + descrizione breve per il doc "amici" ─────────
-const INFO = {
-  maddalena:['Gatta','Gatta rossa gigante dalla coda super soffice: adora popcorn e percorsi a ostacoli.'],
-  catto:['Gattino','Micio blu minuscolo: da schizzinoso a coraggioso, fa il super-duper-mega-fusa.'],
-  gallo:['Gatto','Gatto dal mento rosso e coda blu piumosa: vive su una barca e ha una voce fortissima.'],
-  ciuffo:['Cavallo','Cavallo a macchie tramonto: impetuoso e giocherellone, ama spiaggia e parco.'],
-  ciuffa:['Cavalla','Cavalla a macchie arcobaleno: vivace e curiosa, migliore amica di Ciuffo.'],
-  grunt:['Gorilla','Gorilla blu grande e rimbalzante: pieno di energia, impara a lanciare solo cose sicure.'],
-  henry:['Riccio','Riccetto super-eccitabile: ama i giri in macchina e fa la danza a patata.'],
-  peppa:['Scoiattola','Scoiattolina zucchero filato: giocosa e disordinata, poi impara a riordinare.'],
-  tinto:['Scoiattolo','Scoiattolino verde e blu: gemello di Peppa, impila pigne e fa il supereroe.'],
-  tutti:['Coccodrillo','Coccodrillo giallo gentile e sereno: aiuta gli amici stando loro vicino.'],
-  jugi:['Cane','Cagnolino rosso ciliegia: giocoso e competitivo, poi impara a condividere.'],
-  jugetta:['Cagnolina','Cagnolina azzurro cielo: gemella di Jugi, costruisce torri di blocchi.'],
-  caterina:['Lupa','Lupa dal mantello blu e rosso: birichina, poi impara a essere generosa.'],
-  tata:['Lupa','Lupetta autunno: sorella minore, suona il tamburo con ritmi buffi.'],
-  giacomo:['Bruco','Bruco arcobaleno timido e sensibile: vive in un barattolo di Dido.'],
-  george:['Scimmietta','Marmoset saggio e buffo: insegna il trucco fermati-respira-stringi.'],
-  poppy:['Scimmietta','Marmoset dolce e calma: mostra il respiro profondo con le guance a palloncino.'],
-  momo:['Gufo','Gufo di bronzo dagli occhioni dorati: intelligente, raccoglie i pensieri felici.'],
-  jack:['Cane','Cane viola giocosissimo: si arrabbia in fretta ma impara a calmarsi come le bolle.'],
-  patpat:['Orso','Orsetto morbido come marshmallow: coccolone, impara a dormire da solo.'],
-  frullato:['Mucca','Mucca di peluche profumata di vaniglia: Protettrice della Notte, scaccia gli incubi.'],
-};
-const APP_VERSION = 'v1.0';
-
-// ── AMBIENTI ───────────────────────────────────────────────────────
-const ENVS = {
-  acqua:    {name:'🌊 Laghetto', sky:[[80,150,210],[40,105,150]], night:[[8,16,34],[6,26,52]], water:true,  amb:{cut:520,g:0.12}},
-  foresta:  {name:'🌲 Foresta',  sky:[[110,175,150],[60,120,90]], night:[[10,22,20],[8,30,26]], trees:true, amb:{cut:900,g:0.09}},
-  spiaggia: {name:'🏖 Spiaggia', sky:[[150,200,230],[220,200,160]], night:[[20,30,50],[40,44,60]], water:true, amb:{cut:620,g:0.11}},
-  parco:    {name:'🌳 Parco',    sky:[[130,190,225],[110,170,110]], night:[[12,22,38],[14,34,28]], trees:true, amb:{cut:1000,g:0.08}},
-  casa:     {name:'🏠 Casa',     sky:[[70,90,120],[120,110,140]], night:[[18,18,30],[30,26,40]], amb:{cut:400,g:0.06}},
-};
-let curEnv = 'acqua';
+const APP_VERSION = 'v1.1';
 
 // ── CANVAS ─────────────────────────────────────────────────────────
 const cv = document.getElementById('stage'); let ctx = cv.getContext('2d');
@@ -291,83 +230,7 @@ function stepBeing(b,dt){
 
 // ── SILHOUETTE per specie (stile geometrico) ───────────────────────
 // disegna centrato in (0,0), scala sz, guardando a destra (face gestito fuori)
-function drawCreature(c, sz){
-  const col=c.colors, sleeping=c.sleep>0.6;
-  ctx.lineJoin='round'; ctx.lineCap='round';
-  const body=col[0], acc=col[1]||col[0], ex=col[2]||acc;
-  const S=c.species;
-  // corpo base
-  function ell(x,y,rx,ry,fill){ ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fillStyle=fill; ctx.fill(); }
-  function tri(x1,y1,x2,y2,x3,y3,fill){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); }
-  const s=sz;
-  if(S==='cat'){
-    ell(0,0,s*0.9,s*0.75,body);
-    tri(-s*0.6,-s*0.55,-s*0.3,-s*1.15,-s*0.05,-s*0.5,body); // orecchio L
-    tri( s*0.6,-s*0.55, s*0.3,-s*1.15, s*0.05,-s*0.5,body); // orecchio R
-    ctx.strokeStyle=acc; ctx.lineWidth=s*0.14; ctx.beginPath(); ctx.moveTo(s*0.8,s*0.2); ctx.quadraticCurveTo(s*1.5,-s*0.1,s*1.3,-s*0.8); ctx.stroke(); // coda
-  } else if(S==='dog'){
-    ell(0,0,s*0.95,s*0.72,body);
-    ell(-s*0.7,-s*0.2,s*0.28,s*0.5,acc); ell(s*0.7,-s*0.2,s*0.28,s*0.5,acc); // orecchie flosce
-    ctx.strokeStyle=acc; ctx.lineWidth=s*0.14; ctx.beginPath(); ctx.moveTo(s*0.85,0); ctx.quadraticCurveTo(s*1.4,-s*0.3,s*1.2,-s*0.7); ctx.stroke();
-  } else if(S==='wolf'){
-    ell(0,0,s*0.9,s*0.68,body);
-    tri(-s*0.55,-s*0.5,-s*0.35,-s*1.2,-s*0.1,-s*0.45,acc);
-    tri( s*0.55,-s*0.5, s*0.35,-s*1.2, s*0.1,-s*0.45,acc);
-    tri(s*0.8,s*0.1,s*1.5,-s*0.2,s*1.3,-s*0.9,body); // coda folta
-  } else if(S==='horse'){
-    ell(0,s*0.1,s*1.1,s*0.6,body);
-    ell(s*0.9,-s*0.6,s*0.5,s*0.45,body); // testa
-    tri(-s*1.0,-s*0.5,-s*0.6,-s*0.5,-s*0.8,s*0.1,acc); // criniera
-    ctx.strokeStyle=col[2]||acc; ctx.lineWidth=s*0.16; ctx.beginPath(); ctx.moveTo(-s*1.0,0); ctx.quadraticCurveTo(-s*1.5,s*0.4,-s*1.3,s*0.9); ctx.stroke();
-  } else if(S==='gorilla'){
-    ell(0,0,s*1.0,s*0.95,body);
-    ell(-s*0.85,-s*0.5,s*0.3,s*0.35,body); ell(s*0.85,-s*0.5,s*0.3,s*0.35,body);
-    ell(0,s*0.15,s*0.55,s*0.5,acc); // pancia
-  } else if(S==='hedgehog'){
-    ell(0,s*0.1,s*0.95,s*0.7,acc); // faccia chiara
-    for(let i=-3;i<=3;i++) tri(i*s*0.28,-s*0.3, i*s*0.28-s*0.12,-s*1.15, i*s*0.28+s*0.12,-s*0.3, body); // aculei
-    ell(s*0.7,s*0.2,s*0.35,s*0.3,acc);
-  } else if(S==='squirrel'){
-    ell(0,s*0.1,s*0.7,s*0.72,body);
-    ctx.beginPath(); ctx.moveTo(-s*0.5,s*0.3); ctx.quadraticCurveTo(-s*1.6,-s*0.2,-s*0.9,-s*1.2); ctx.quadraticCurveTo(-s*0.3,-s*0.6,-s*0.5,s*0.3); ctx.fillStyle=acc; ctx.fill(); // coda grande
-    tri(-s*0.3,-s*0.55,-s*0.15,-s*1.0,0,-s*0.5,body);
-  } else if(S==='croc'){
-    ell(0,0,s*1.2,s*0.5,body);
-    ell(s*1.1,s*0.05,s*0.7,s*0.28,body); // muso lungo
-    for(let i=0;i<5;i++) tri(-s*0.8+i*s*0.45,-s*0.45,-s*0.65+i*s*0.45,-s*0.85,-s*0.5+i*s*0.45,-s*0.45,acc); // dorso
-  } else if(S==='caterpillar'){
-    for(let i=0;i<5;i++){ ell((i-2)*s*0.55,Math.sin(i*0.9+ (performance.now()/300))*s*0.12, s*0.42,s*0.42, col[i%col.length]); }
-  } else if(S==='monkey'){
-    ell(0,0,s*0.8,s*0.75,body);
-    ell(-s*0.75,-s*0.1,s*0.28,s*0.32,body); ell(s*0.75,-s*0.1,s*0.28,s*0.32,body); // orecchie tonde
-    ell(0,s*0.15,s*0.5,s*0.45,acc);
-    ctx.strokeStyle=body; ctx.lineWidth=s*0.13; ctx.beginPath(); ctx.moveTo(-s*0.7,s*0.3); ctx.quadraticCurveTo(-s*1.5,s*0.2,-s*1.2,-s*0.5); ctx.stroke();
-  } else if(S==='owl'){
-    ell(0,0,s*0.85,s*0.95,body);
-    ell(-s*0.38,-s*0.3,s*0.32,s*0.32,'#20303a'); ell(s*0.38,-s*0.3,s*0.32,s*0.32,'#20303a'); // occhioni scuri
-    if(!sleeping){ ell(-s*0.38,-s*0.3,s*0.15,s*0.15,acc); ell(s*0.38,-s*0.3,s*0.15,s*0.15,acc); }
-    tri(-s*0.7,-s*0.7,-s*0.35,-s*1.1,-s*0.15,-s*0.6,body);
-    tri( s*0.7,-s*0.7, s*0.35,-s*1.1, s*0.15,-s*0.6,body);
-  } else if(S==='bear'){
-    ell(0,0,s*0.95,s*0.9,body);
-    ell(-s*0.7,-s*0.6,s*0.3,s*0.3,body); ell(s*0.7,-s*0.6,s*0.3,s*0.3,body);
-    ell(0,s*0.2,s*0.45,s*0.4,acc);
-  } else if(S==='cow'){
-    ell(0,0,s*1.0,s*0.75,body);
-    ell(-s*0.7,-s*0.55,s*0.22,s*0.28,acc); ell(s*0.7,-s*0.55,s*0.22,s*0.28,acc); // orecchie
-    tri(-s*0.5,-s*0.7,-s*0.35,-s*1.05,-s*0.2,-s*0.7,'#e8e0d0'); // cornino
-    tri( s*0.5,-s*0.7, s*0.35,-s*1.05, s*0.2,-s*0.7,'#e8e0d0');
-    ell(0,s*0.35,s*0.4,s*0.3,acc);
-  } else {
-    ell(0,0,s*0.9,s*0.7,body);
-  }
-  // occhi (tranne gufo che li ha già) — chiusi se dorme
-  if(S!=='owl' && S!=='caterpillar'){
-    if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08);
-      ctx.beginPath(); ctx.moveTo(s*0.1,-s*0.1); ctx.lineTo(s*0.35,-s*0.1); ctx.stroke(); }
-    else { ell(s*0.28,-s*0.12,s*0.1,s*0.12,'#182530'); }
-  }
-}
+// drawCreature() vive in creatures.js (le forme dei corpi). Qui c'è solo il render della scena.
 
 // ── RENDER scena ───────────────────────────────────────────────────
 let ripples=[]; for(let i=0;i<7;i++) ripples.push({x:Math.random(),y:Math.random()*0.4+0.55,sp:0.1+Math.random()*0.2});
@@ -380,7 +243,7 @@ function draw(){
   // astro: sole di giorno, luna di notte
   const ax=W*0.82, ay=H*0.15, ar=26*DPR;
   // "ora" percepita per colorare l'astro: reale se auto, stimata dallo slider se manuale
-  const hr = autoClock ? curHour : (day>=0.5 ? 6+(1-day)*12 : 18+(0.5-day)*12); // mattino se sale, sera se scende
+  const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
   if(dn>0.5){
     // LUNA: gialla la sera (18-22) e verso l'alba (4-6), bianca a notte fonda
     let moon;
@@ -505,15 +368,16 @@ function buildEnvButtons(){
   });
 }
 
-const dayEl=document.getElementById('day'), labEl=document.getElementById('label');
-const clockBtn=document.getElementById('clockBtn'), clockTime=document.getElementById('clockTime');
-let autoClock=true;   // di default il mondo segue l'ora reale
-let curHour=12;       // ora corrente (per colorare sole/luna)
+let autoClock=true;   // il mondo segue SEMPRE l'ora reale (ritmo lento, no controlli per Eliana)
+let forceDay=null;    // easter egg debug: null=auto, oppure valore day fisso (0..1)
+let curHour=12;
+// mappa fasi debug → (day, ora rappresentativa per colore astro)
+const PHASES={ alba:[0.5,6.5], giorno:[1,12], tramonto:[0.45,19.5], notte:[0,2] };
 // ora reale (0..1) → day (1=giorno pieno, 0=notte). Curva alba/tramonto morbida.
 function dayFromClock(){
+  if(forceDay!==null) return PHASES[forceDay][0];
   const now=new Date();
   const h=now.getHours()+now.getMinutes()/60;
-  // notte<6, alba 6-8, giorno 8-18, tramonto 18-21, notte>21
   let d;
   if(h<5||h>=22) d=0;
   else if(h<8)  d=(h-5)/3;        // alba 5→8
@@ -522,70 +386,120 @@ function dayFromClock(){
   else d=0;
   return Math.max(0,Math.min(1,d));
 }
-function setLabel(){ labEl.textContent=day>0.6?'🌞 Giorno':day>0.35?'🌇 Sera':'🌙 Notte'; }
-function syncSliderFromDay(){ dayEl.value=Math.round((1-day)*100); }
 function tickClock(){
   const now=new Date();
-  curHour=now.getHours()+now.getMinutes()/60;
-  clockTime.textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  if(autoClock){ day=dayFromClock(); setLabel(); syncSliderFromDay(); }
+  curHour = forceDay!==null ? PHASES[forceDay][1] : now.getHours()+now.getMinutes()/60;
+  day=dayFromClock();
 }
 
 // ── OROLOGIO ANALOGICO (impara a leggere le ore) ──────────────
-const clockModal=document.getElementById('clockModal');
 const clockCanvas=document.getElementById('clockCanvas');
-const clockDigital=document.getElementById('clockDigital');
-let clockAnim=0;
 function drawAnalogClock(){
   const cvx=clockCanvas, gx=cvx.getContext('2d');
   const dpr=Math.min(2,window.devicePixelRatio||1);
-  const S=320; if(cvx.width!==S*dpr){ cvx.width=cvx.height=S*dpr; }
-  const R=S*dpr/2, cx=R, cy=R, rad=R*0.9;
-  gx.clearRect(0,0,cvx.width,cvx.height);
-  // quadrante
-  gx.beginPath(); gx.arc(cx,cy,rad,0,6.2832); gx.fillStyle='#fbf6ea'; gx.fill();
-  gx.lineWidth=R*0.045; gx.strokeStyle='#e8443a'; gx.stroke();
-  // tacche + numeri
-  for(let i=1;i<=12;i++){
-    const a=i/12*6.2832 - Math.PI/2;
-    // tacca ore
-    const x1=cx+Math.cos(a)*rad*0.86, y1=cy+Math.sin(a)*rad*0.86;
-    const x2=cx+Math.cos(a)*rad*0.94, y2=cy+Math.sin(a)*rad*0.94;
-    gx.beginPath(); gx.moveTo(x1,y1); gx.lineTo(x2,y2); gx.lineWidth=R*0.03; gx.strokeStyle='#33475a'; gx.stroke();
-    // numero
-    const nx=cx+Math.cos(a)*rad*0.72, ny=cy+Math.sin(a)*rad*0.72;
-    gx.fillStyle='#22323f'; gx.font=`700 ${Math.round(R*0.18)}px system-ui,sans-serif`;
-    gx.textAlign='center'; gx.textBaseline='middle'; gx.fillText(i,nx,ny);
-  }
-  // tacche minuti
-  for(let i=0;i<60;i++){ if(i%5===0) continue; const a=i/60*6.2832-Math.PI/2;
-    const x1=cx+Math.cos(a)*rad*0.9, y1=cy+Math.sin(a)*rad*0.9;
-    const x2=cx+Math.cos(a)*rad*0.94, y2=cy+Math.sin(a)*rad*0.94;
-    gx.beginPath(); gx.moveTo(x1,y1); gx.lineTo(x2,y2); gx.lineWidth=R*0.008; gx.strokeStyle='#8aa'; gx.stroke(); }
-  const now=new Date();
-  const s=now.getSeconds()+now.getMilliseconds()/1000;
-  const m=now.getMinutes()+s/60;
-  const h=(now.getHours()%12)+m/60;
-  function hand(angle,len,w,color,round=true){
-    const a=angle-Math.PI/2;
-    gx.beginPath(); gx.moveTo(cx,cy);
-    gx.lineTo(cx+Math.cos(a)*len, cy+Math.sin(a)*len);
-    gx.lineWidth=w; gx.strokeStyle=color; gx.lineCap=round?'round':'butt'; gx.stroke();
-  }
-  hand(h/12*6.2832, rad*0.5, R*0.055, '#22323f');   // ore
-  hand(m/60*6.2832, rad*0.75, R*0.038, '#33475a');  // minuti
-  hand(s/60*6.2832, rad*0.82, R*0.016, '#e8443a');  // secondi
-  gx.beginPath(); gx.arc(cx,cy,R*0.045,0,6.2832); gx.fillStyle='#e8443a'; gx.fill();
-  clockDigital.textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-}
-function clockLoop(){ if(clockModal.hidden) return; drawAnalogClock(); clockAnim=requestAnimationFrame(clockLoop); }
-clockBtn.addEventListener('click',()=>{ clockModal.hidden=false; clockLoop(); });
-document.getElementById('clockClose').addEventListener('click',()=>{ clockModal.hidden=true; });
-clockModal.addEventListener('click',e=>{ if(e.target===clockModal) clockModal.hidden=true; });
+  const W0=440,H0=300; if(cvx.width!==W0*dpr){ cvx.width=W0*dpr; cvx.height=H0*dpr; }
+  const w=cvx.width, h=cvx.height, u=w/440;
+  gx.clearRect(0,0,w,h);
+  const cx=w/2;
+  // ===== CORPO TAMBOUR (cappello di Napoleone), legno rovere miele =====
+  const baseY=h-34*u;          // linea d'appoggio
+  const humpY=34*u;            // cima della gobba
+  const halfW=200*u;           // semi-larghezza alla base
+  const lx=cx-halfW, rx=cx+halfW;
+  gx.save(); gx.shadowColor='rgba(0,0,0,.4)'; gx.shadowBlur=22*u; gx.shadowOffsetY=9*u;
+  gx.beginPath();
+  gx.moveTo(lx, baseY);
+  // fianco sinistro sale dolce
+  gx.lineTo(lx, baseY-40*u);
+  gx.quadraticCurveTo(lx, baseY-80*u, cx-140*u, baseY-95*u);
+  // gobba centrale
+  gx.quadraticCurveTo(cx-70*u, humpY-6*u, cx, humpY);
+  gx.quadraticCurveTo(cx+70*u, humpY-6*u, cx+140*u, baseY-95*u);
+  // fianco destro scende
+  gx.quadraticCurveTo(rx, baseY-80*u, rx, baseY-40*u);
+  gx.lineTo(rx, baseY);
+  // base coi piedini
+  gx.quadraticCurveTo(rx, baseY+14*u, rx-24*u, baseY+14*u);
+  gx.lineTo(lx+24*u, baseY+14*u);
+  gx.quadraticCurveTo(lx, baseY+14*u, lx, baseY);
+  gx.closePath();
+  const wood=gx.createLinearGradient(0,humpY,0,baseY);
+  wood.addColorStop(0,'#d9a668'); wood.addColorStop(.5,'#c08a4a'); wood.addColorStop(1,'#a06e35');
+  gx.fillStyle=wood; gx.fill();
+  gx.restore();
+  gx.lineWidth=5*u; gx.strokeStyle='#7a5220'; gx.stroke();
+  // venature legno
+  gx.lineWidth=1.5*u; gx.strokeStyle='rgba(120,70,20,.25)';
+  for(let i=0;i<4;i++){ gx.beginPath(); const yy=baseY-20*u-i*18*u;
+    gx.moveTo(lx+30*u,yy); gx.quadraticCurveTo(cx,yy-8*u,rx-30*u,yy); gx.stroke(); }
+  // due piedini scuri
+  gx.fillStyle='#5e3f18';
+  gx.beginPath(); gx.ellipse(cx-halfW+30*u,baseY+14*u,18*u,7*u,0,0,6.2832); gx.fill();
+  gx.beginPath(); gx.ellipse(cx+halfW-30*u,baseY+14*u,18*u,7*u,0,0,6.2832); gx.fill();
 
-dayEl.addEventListener('input',()=>{ autoClock=false;   // trascinando → manuale
-  day=1-dayEl.value/100; setLabel(); });
-tickClock(); setInterval(tickClock,20000);   // aggiorna ogni 20s
+  // ===== QUADRANTE (centrato nel corpo) =====
+  const fcx=cx, fcy=humpY+ (baseY-humpY)*0.52, rad=95*u;
+  // cornice ottone
+  gx.beginPath(); gx.arc(fcx,fcy,rad+12*u,0,6.2832);
+  const bez=gx.createLinearGradient(fcx-rad,fcy-rad,fcx+rad,fcy+rad);
+  bez.addColorStop(0,'#e6c25a'); bez.addColorStop(.5,'#b8912f'); bez.addColorStop(1,'#e6c25a');
+  gx.fillStyle=bez; gx.fill(); gx.lineWidth=2.5*u; gx.strokeStyle='#7a5410'; gx.stroke();
+  // faccia avorio
+  gx.beginPath(); gx.arc(fcx,fcy,rad,0,6.2832);
+  const ivory=gx.createRadialGradient(fcx,fcy-rad*0.3,rad*0.2,fcx,fcy,rad);
+  ivory.addColorStop(0,'#fffdf6'); ivory.addColorStop(1,'#f0e6cf');
+  gx.fillStyle=ivory; gx.fill();
+  // tacche minuti
+  for(let i=0;i<60;i++){ const a=i/60*6.2832-Math.PI/2;
+    const big=i%5===0; const r1=rad*(big?0.80:0.88), r2=rad*0.93;
+    gx.beginPath(); gx.moveTo(fcx+Math.cos(a)*r1,fcy+Math.sin(a)*r1);
+    gx.lineTo(fcx+Math.cos(a)*r2,fcy+Math.sin(a)*r2);
+    gx.lineWidth=(big?3:1)*u; gx.strokeStyle=big?'#1c1208':'#9a8663'; gx.stroke(); }
+  // NUMERI 1-12 neri in stile classico
+  gx.fillStyle='#161009'; gx.textAlign='center'; gx.textBaseline='middle';
+  gx.font=`700 ${Math.round(22*u)}px Georgia,'Times New Roman',serif`;
+  for(let i=1;i<=12;i++){ const a=i/12*6.2832-Math.PI/2;
+    gx.fillText(i, fcx+Math.cos(a)*rad*0.68, fcy+Math.sin(a)*rad*0.68); }
+  // ===== LANCETTE (ore + minuti) stile classico nero =====
+  const now=new Date();
+  const m=now.getMinutes()+now.getSeconds()/60;
+  const hh=(now.getHours()%12)+m/60;
+  function hand(angle,len,wid,color){ const a=angle-Math.PI/2;
+    gx.beginPath(); gx.moveTo(fcx-Math.cos(a)*len*0.2,fcy-Math.sin(a)*len*0.2);
+    gx.lineTo(fcx+Math.cos(a)*len,fcy+Math.sin(a)*len);
+    gx.lineWidth=wid; gx.lineCap='round'; gx.strokeStyle=color; gx.stroke(); }
+  hand(hh/12*6.2832, rad*0.52, 7*u, '#161009');   // ore
+  hand(m/60*6.2832, rad*0.80, 4.5*u, '#161009');  // minuti
+  gx.beginPath(); gx.arc(fcx,fcy,5*u,0,6.2832); gx.fillStyle='#161009'; gx.fill();
+}
+// orologio sempre visibile in un angolo: ridisegna ~2 volte/sec (bastano ore+minuti)
+clockCanvas.hidden=false;
+drawAnalogClock(); setInterval(drawAnalogClock, 500);
+tickClock(); setInterval(tickClock,20000);   // il mondo segue l'ora reale
+
+// 🥚 easter egg debug: 3 tap veloci sull'orologio → menù fasi (alba/giorno/tramonto/notte/auto)
+const phaseMenu=document.getElementById('phaseMenu');
+let tapCount=0, tapT=0;
+clockCanvas.style.pointerEvents='auto';
+function highlightPhase(){
+  phaseMenu.querySelectorAll('button').forEach(b=>{
+    const on=(b.dataset.ph==='auto' && forceDay===null) || b.dataset.ph===forceDay;
+    b.classList.toggle('on',on);
+  });
+}
+clockCanvas.addEventListener('click',()=>{
+  const now=performance.now();
+  if(now-tapT>800) tapCount=0;
+  tapT=now; tapCount++;
+  if(tapCount>=3){ tapCount=0; highlightPhase(); phaseMenu.hidden=!phaseMenu.hidden; }
+});
+phaseMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  forceDay = b.dataset.ph==='auto' ? null : b.dataset.ph;
+  tickClock(); highlightPhase(); phaseMenu.hidden=true;
+}));
+
+tickClock(); setInterval(tickClock,20000);   // il mondo segue l'ora reale
+
 // ── POSTER intro: tutti gli animali nel paesaggio (riusa drawCreature) ──
 function drawPoster(){
   const pc=document.getElementById('poster'); if(!pc) return;

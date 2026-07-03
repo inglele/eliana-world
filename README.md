@@ -31,14 +31,30 @@ So instead of generic creatures, the world is populated by **her** friends — M
 
 Deliberately minimal ([ponytail](https://github.com/DietrichGebert/ponytail) style):
 
-- **One file.** `index.html` — HTML + CSS + JS inline.
 - **No backend, no build, no dependencies, no audio assets.** Everything runs client-side.
 - **2D `<canvas>`** for rendering, **Web Audio API** for procedural sound.
 - The intro poster reuses the exact same `drawCreature()` function as the live world — zero duplication.
 
+## Project structure (modular, editable)
+
+The content lives in plain `.js` files anyone can edit — no build step:
+
+| File | What it holds | Edit it to… |
+|---|---|---|
+| `characters.js` | the 21 friends (name, type, colours, movement, sound, description) | **add / change an animal** |
+| `environments.js` | the scenes (pond / forest / beach / park / home: sky + ambient) | **add / change a scene** |
+| `creatures.js` | the body shapes per species (`drawCreature`) | **add a new body type** |
+| `index.html` | the engine (audio, movement, clock, render loop) | rarely |
+
+**Add a friend** → copy a line in `characters.js`, change the fields. If its `species` already exists (cat, dog, owl…), that's it. Only touch `creatures.js` if you want a brand-new body shape.
+
+Each file has a comment header explaining every field.
+
+> Note: because it loads several `.js` files, open it via a served URL (e.g. `python3 -m http.server`) rather than double-clicking `file://`.
+
 ## Run it
 
-Just open `index.html` in a browser. Or serve the folder with any static server:
+Serve the folder with any static server:
 
 ```bash
 python3 -m http.server 8000
