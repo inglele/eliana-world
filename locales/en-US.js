@@ -8,6 +8,7 @@
 
 I18N['en-US'] = {
   label: 'English',
+  flag: '🇺🇸',
   enter: 'tap to enter',
   clear: 'Clear',
   friends: 'The friends',

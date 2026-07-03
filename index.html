@@ -30,8 +30,10 @@
     background:rgba(255,120,120,.18); color:#ffd6d6; }
   #infoBtn { border:none; border-radius:50%; width:30px; height:30px; font-size:17px; cursor:pointer;
     background:rgba(255,255,255,.1); color:#cfe0f0; line-height:1; }
-  #langBtn { border:none; border-radius:50%; width:30px; height:30px; font-size:15px; cursor:pointer;
-    background:rgba(255,255,255,.1); color:#cfe0f0; line-height:1; }
+  #langBtn { position:fixed; top:12px; right:12px; z-index:8; border:none; border-radius:50%;
+    width:44px; height:44px; font-size:24px; cursor:pointer; line-height:1; padding:0;
+    background:rgba(15,33,54,.7); backdrop-filter:blur(4px); box-shadow:0 3px 10px rgba(0,0,0,.35); }
+  #langBtn:active { transform:scale(.9); }
   #clockBtn { border:none; border-radius:10px; padding:5px 9px; font-size:12px; cursor:pointer;
     background:rgba(255,255,255,.08); color:#cfe0f0; white-space:nowrap; }
   #clockBtn.auto { background:rgba(127,178,255,.32); color:#eaf2fb; }
@@ -79,11 +81,11 @@
 </head>
 <body>
 <canvas id="stage"></canvas>
+<button id="langBtn" title="Language" aria-label="Cambia lingua" hidden>🌐</button>
 
 <div id="top" hidden>
   <div id="env"></div>
   <button id="clear" title="Svuota">🧹</button>
-  <button id="langBtn" title="Language" aria-label="Language">🌐</button>
   <button id="infoBtn" title="Gli amici" aria-label="Info">ⓘ</button>
 </div>
 
@@ -598,6 +600,7 @@ document.getElementById('start').addEventListener('click',()=>{
   const st=document.getElementById('start');
   document.getElementById('top').hidden=false;
   document.getElementById('palette').hidden=false;
+  document.getElementById('langBtn').hidden=false;
   buildPalette(); buildEnvButtons(); initAudio();
   // mondo iniziale: qualche personaggio dell'ambiente acqua
   ['gallo','tutti','catto'].forEach(addBeing);
@@ -618,6 +621,7 @@ function applyI18n(){
   document.getElementById('clear').title=L.clear;
   document.getElementById('infoBtn').title=L.friends;
   phaseMenu.querySelectorAll('button').forEach(b=>{ b.textContent=L.phases[b.dataset.ph]||b.textContent; });
+  document.getElementById('langBtn').textContent = L.flag || '🌐';  // bandiera lingua attiva
 }
 document.getElementById('langBtn').addEventListener('click',()=> cycleLang());
 applyI18n();
