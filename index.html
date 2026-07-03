@@ -386,7 +386,6 @@ function draw(){
     for(const rp of ripples){ const yy=seaTop+(H-seaTop)*rp.y+Math.sin(t*rp.sp*6+rp.x*9)*4*DPR;
       ctx.beginPath(); for(let x=0;x<=W;x+=16*DPR){ const y=yy+Math.sin(x/W*8+t*rp.sp*4+rp.x*10)*3*DPR; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
   }
-  }
   // BOSCO (alberi a destra, ondeggiano)
   if(LAYERS.bosco.on){
     const tc=mix([40,110,60],[8,30,20],dn), trunk=mix([90,60,35],[20,16,12],dn);
