@@ -66,6 +66,18 @@ python3 -m http.server 8000
 
 No install step. It's static.
 
+## Versioning & deploy
+
+The version shown in the info panel is **derived from git** (no manual bumping):
+
+- `deploy.sh` runs `git describe` and writes `version.js` (read by the app).
+- Between releases it auto-increments as `vX.Y-N-gHASH` (N commits after the last tag).
+
+```bash
+./deploy.sh          # deploy current state (version = git describe)
+./deploy.sh v1.4     # tag a release and deploy
+```
+
 ## The friends
 
 | | Name | Type | About |
