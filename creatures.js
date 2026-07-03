@@ -88,10 +88,11 @@ function drawCreature(c, sz){
   const FRONTAL = ['cat','dog','wolf','gorilla','monkey','bear','cow'];
   const PROFILE = ['horse','croc','hedgehog','squirrel'];
   if(FRONTAL.includes(S)){
+    const ey=-s*0.42;   // occhi in alto sulla faccia, NON sul muso
     if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08); ctx.lineCap='round';
-      ctx.beginPath(); ctx.moveTo(-s*0.32,-s*0.1); ctx.lineTo(-s*0.10,-s*0.1); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo( s*0.10,-s*0.1); ctx.lineTo( s*0.32,-s*0.1); ctx.stroke(); }
-    else { ell(-s*0.22,-s*0.12,s*0.1,s*0.12,'#182530'); ell(s*0.22,-s*0.12,s*0.1,s*0.12,'#182530'); }
+      ctx.beginPath(); ctx.moveTo(-s*0.32,ey); ctx.lineTo(-s*0.10,ey); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo( s*0.10,ey); ctx.lineTo( s*0.32,ey); ctx.stroke(); }
+    else { ell(-s*0.22,ey,s*0.1,s*0.12,'#182530'); ell(s*0.22,ey,s*0.1,s*0.12,'#182530'); }
   } else if(PROFILE.includes(S)){
     // occhio singolo verso il muso (lato destro, dove guarda)
     const ex = (S==='horse'||S==='croc') ? s*0.85 : s*0.3;
