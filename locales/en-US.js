@@ -9,6 +9,7 @@
 I18N['en-US'] = {
   label: 'English',
   flag: '🇺🇸',
+  title: 'Eliana’s World',
   enter: 'tap to enter',
   clear: 'Clear',
   friends: 'The friends',

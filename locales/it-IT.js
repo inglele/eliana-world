@@ -9,6 +9,7 @@
 I18N['it-IT'] = {
   label: 'Italiano',
   flag: '🇮🇹',
+  title: 'Il Mondo di Eliana',
   enter: 'tocca per entrare',
   clear: 'Svuota',
   friends: 'Gli amici',

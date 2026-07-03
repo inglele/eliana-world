@@ -92,7 +92,7 @@
 <div id="infoModal" hidden>
   <div id="infoCard">
     <div id="infoHead">
-      <div><b>Il Mondo di Eliana</b> <span id="infoVer"></span></div>
+      <div><b id="infoTitle">Il Mondo di Eliana</b> <span id="infoVer"></span></div>
       <button id="infoClose" aria-label="Chiudi">✕</button>
     </div>
     <p id="infoIntro">Gli amici che vivono nel mondo:</p>
@@ -616,7 +616,9 @@ function applyI18n(){
   initI18n();   // risolve LANG + L ora che i locales sono registrati
   document.documentElement.lang=LANG;
   const st=document.getElementById('startText');
-  if(st){ st.querySelector('p').textContent=L.enter; } // h1 resta "Il Mondo di Eliana" (titolo/nome)
+  if(st){ st.querySelector('h1').textContent=L.title; st.querySelector('p').textContent=L.enter; }
+  document.title = L.title;
+  const it2=document.getElementById('infoTitle'); if(it2) it2.textContent=L.title;
   document.getElementById('infoIntro').textContent=L.friendsIntro;
   document.getElementById('clear').title=L.clear;
   document.getElementById('infoBtn').title=L.friends;
