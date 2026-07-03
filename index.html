@@ -294,6 +294,17 @@ function draw(){
   const g=ctx.createLinearGradient(0,0,0,H*BASE.horizon); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot));
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H*BASE.horizon);
   const t=performance.now()/1000;
+  // MONTAGNE (lontane, sfondo cielo) — disegnate PRIMA di sole/luna così gli astri gli stanno DAVANTI
+  if(LAYERS.montagne.on){
+    const H0m=H*BASE.horizon, mc=mix([120,130,150],[30,40,66],dn);
+    const peaks=[[0.12,0.34],[0.30,0.52],[0.52,0.40],[0.72,0.56],[0.90,0.38]];
+    for(const p of peaks){ const x=p[0]*W, hh=H0m*p[1];
+      ctx.fillStyle=rgb(mc);
+      ctx.beginPath(); ctx.moveTo(x-hh*1.1,H0m); ctx.lineTo(x,H0m-hh); ctx.lineTo(x+hh*1.1,H0m); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=`rgba(255,255,255,${0.5-0.3*dn})`;
+      ctx.beginPath(); ctx.moveTo(x-hh*0.3,H0m-hh*0.75); ctx.lineTo(x,H0m-hh); ctx.lineTo(x+hh*0.3,H0m-hh*0.75); ctx.closePath(); ctx.fill();
+    }
+  }
   // astro: sole di giorno (a destra), luna di notte (a sinistra, lontano dagli alberi)
   const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
   let isNight;
@@ -350,18 +361,6 @@ function draw(){
   }
   // ===== ELEMENTI NATURA (layer fissi, combinabili) =====
   const H0=H*BASE.horizon;
-  // MONTAGNE (in alto, lontane sullo sfondo del cielo)
-  if(LAYERS.montagne.on){
-    const mc=mix([120,130,150],[30,40,66],dn);
-    const mBase=H0;   // base sull'orizzonte; picchi più alti = montagne che svettano nel cielo
-    const peaks=[[0.12,0.34],[0.30,0.52],[0.52,0.40],[0.72,0.56],[0.90,0.38]];
-    for(const p of peaks){ const x=p[0]*W, hh=H0*p[1];
-      ctx.fillStyle=rgb(mc);
-      ctx.beginPath(); ctx.moveTo(x-hh*1.1,mBase); ctx.lineTo(x,mBase-hh); ctx.lineTo(x+hh*1.1,mBase); ctx.closePath(); ctx.fill();
-      ctx.fillStyle=`rgba(255,255,255,${0.5-0.3*dn})`;
-      ctx.beginPath(); ctx.moveTo(x-hh*0.3,mBase-hh*0.75); ctx.lineTo(x,mBase-hh); ctx.lineTo(x+hh*0.3,mBase-hh*0.75); ctx.closePath(); ctx.fill();
-    }
-  }
   // PRATO base (terra)
   const gc=mix(BASE.groundDay,BASE.groundNight,dn);
   ctx.fillStyle=rgb(gc); ctx.fillRect(0,H0,W,H-H0);
