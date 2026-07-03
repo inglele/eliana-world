@@ -17,6 +17,13 @@ I18N['it-IT'] = {
   clockTitle: 'Che ore sono?',
   sun: 'Sole',
   moon: 'Luna',
+  timeIntro: 'Sono le',
+  oclock: 'in punto',
+  half: 'e mezza',
+  quarter: 'e un quarto',
+  threeQuarter: 'meno un quarto',
+  and: 'e',
+  minutes: 'minuti',
   phases: { alba:'🌅 Alba', giorno:'🌞 Giorno', tramonto:'🌇 Tramonto', notte:'🌙 Notte', auto:'🕒 Auto (ora reale)' },
   envs: { acqua:'🌊 Laghetto', foresta:'🌲 Foresta', spiaggia:'🏖 Spiaggia', parco:'🌳 Parco', casa:'🏠 Casa' },
   chars: {

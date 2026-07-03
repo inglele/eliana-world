@@ -58,7 +58,25 @@
   #infoTable .tp { font-size:11px; color:#8fb2d8; }
   #infoTable .ds { font-size:12px; opacity:.8; line-height:1.35; }
   #clockCanvas { position:fixed; left:10px; bottom:74px; z-index:6; width:min(40vw,190px); height:auto;
-    filter:drop-shadow(0 6px 14px rgba(0,0,0,.4)); pointer-events:none; }
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,.4)); cursor:pointer; }
+  #bigClock { position:fixed; inset:0; z-index:25; display:flex; align-items:center; justify-content:center;
+    background:rgba(4,10,18,.72); backdrop-filter:blur(5px); padding:16px; animation:bcFade .25s ease; }
+  @keyframes bcFade { from{opacity:0} to{opacity:1} }
+  #bigClockInner { position:relative; animation:bcPop .35s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes bcPop { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+  #bigClockCanvas { width:min(86vw,460px); height:auto; display:block; }
+  #bigClockClose { position:absolute; top:-6px; right:-6px; z-index:2; border:none; background:rgba(20,12,6,.8);
+    color:#f0e0c8; border-radius:50%; width:34px; height:34px; cursor:pointer; font-size:15px; }
+  #owlHelper { position:absolute; right:-8px; bottom:-6px; border:none; background:none; cursor:pointer; padding:0;
+    animation:owlBob 2.2s ease-in-out infinite; }
+  #owlHelper:active { transform:scale(.9); }
+  @keyframes owlBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  #owlCanvas { width:80px; height:80px; display:block; }
+  #clockSpeech { position:absolute; right:70px; bottom:36px; max-width:200px; background:#fffdf6; color:#22323f;
+    border-radius:14px; padding:10px 14px; font-size:15px; font-weight:600; box-shadow:0 6px 18px rgba(0,0,0,.35);
+    animation:bcPop .3s ease; }
+  #clockSpeech::after { content:''; position:absolute; right:-8px; bottom:14px; border:8px solid transparent;
+    border-left-color:#fffdf6; }
   #phaseMenu { position:fixed; left:10px; bottom:74px; z-index:22; display:flex; flex-direction:column; gap:4px;
     background:rgba(15,33,54,.96); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:6px;
     box-shadow:0 10px 30px rgba(0,0,0,.5); }
@@ -101,6 +119,14 @@
 </div>
 
 <canvas id="clockCanvas" width="440" height="300" hidden></canvas>
+<div id="bigClock" hidden>
+  <div id="bigClockInner">
+    <button id="bigClockClose" aria-label="Chiudi">✕</button>
+    <canvas id="bigClockCanvas" width="440" height="300"></canvas>
+    <button id="owlHelper" title="Che ore sono?"><canvas id="owlCanvas" width="90" height="90"></canvas></button>
+    <div id="clockSpeech" hidden></div>
+  </div>
+</div>
 <div id="phaseMenu" hidden>
   <button data-ph="alba">🌅 Alba</button>
   <button data-ph="giorno">🌞 Giorno</button>
@@ -435,8 +461,8 @@ function tickClock(){
 
 // ── OROLOGIO ANALOGICO (impara a leggere le ore) ──────────────
 const clockCanvas=document.getElementById('clockCanvas');
-function drawAnalogClock(){
-  const cvx=clockCanvas, gx=cvx.getContext('2d');
+function drawAnalogClock(targetCanvas){
+  const cvx=targetCanvas||clockCanvas, gx=cvx.getContext('2d');
   const dpr=Math.min(2,window.devicePixelRatio||1);
   const W0=440,H0=300; if(cvx.width!==W0*dpr){ cvx.width=W0*dpr; cvx.height=H0*dpr; }
   const w=cvx.width, h=cvx.height, u=w/440;
@@ -532,8 +558,69 @@ clockCanvas.addEventListener('click',()=>{
   const now=performance.now();
   if(now-tapT>800) tapCount=0;
   tapT=now; tapCount++;
-  if(tapCount>=3){ tapCount=0; highlightPhase(); phaseMenu.hidden=!phaseMenu.hidden; }
+  if(tapCount>=3){ tapCount=0; highlightPhase(); phaseMenu.hidden=!phaseMenu.hidden; return; }
+  // 1 tap = apri orologio grande (dopo un attimo, per non confondere col 3-tap)
+  clearTimeout(openBigT);
+  openBigT=setTimeout(()=>{ if(tapCount<3) openBigClock(); tapCount=0; }, 260);
 });
+let openBigT=0;
+
+// ===== OROLOGIO GRANDE + gufo aiutante Momo =====
+const bigClock=document.getElementById('bigClock');
+const bigClockCanvas=document.getElementById('bigClockCanvas');
+const owlCanvas=document.getElementById('owlCanvas');
+const clockSpeech=document.getElementById('clockSpeech');
+let bigClockTimer=0;
+function openBigClock(){
+  bigClock.hidden=false; clockSpeech.hidden=true;
+  drawAnalogClock(bigClockCanvas); drawOwl();
+  clearInterval(bigClockTimer); bigClockTimer=setInterval(()=>drawAnalogClock(bigClockCanvas),500);
+}
+function closeBigClock(){ bigClock.hidden=true; clearInterval(bigClockTimer); window.speechSynthesis&&speechSynthesis.cancel(); }
+document.getElementById('bigClockClose').addEventListener('click',closeBigClock);
+bigClock.addEventListener('click',e=>{ if(e.target===bigClock) closeBigClock(); });
+
+// disegna Momo il gufo (riusa drawCreature)
+function drawOwl(){
+  const d=Math.min(2,window.devicePixelRatio||1);
+  owlCanvas.width=80*d; owlCanvas.height=80*d;
+  const prevCtx=ctx, prevDPR=DPR; ctx=owlCanvas.getContext('2d'); DPR=d;
+  ctx.clearRect(0,0,owlCanvas.width,owlCanvas.height);
+  ctx.save(); ctx.translate(40*d,44*d);
+  const momo=BYID.momo || {species:'owl',colors:['#b98a52','#ffe27a'],sleep:0};
+  drawCreature({...momo,sleep:0}, 22*d);
+  ctx.restore();
+  ctx=prevCtx; DPR=prevDPR;
+}
+
+// l'ora a parole (usa cifre: speechSynthesis le legge giuste per lingua)
+function timeSentence(){
+  const now=new Date(); let h=now.getHours(); const m=now.getMinutes();
+  const h12=((h%12)||12);
+  let mainH=h12, phrase;
+  if(m===0) phrase=`${L.timeIntro} ${h12} ${L.oclock}`;
+  else if(m===15) phrase=`${L.timeIntro} ${h12} ${L.quarter}`.replace('{h}',h12);
+  else if(m===30) phrase=`${L.timeIntro} ${h12} ${L.half}`;
+  else if(m===45){ const nh=((h12%12)+1); phrase=`${L.timeIntro} ${nh} ${L.threeQuarter}`; }
+  else phrase=`${L.timeIntro} ${h12} ${L.and} ${m} ${L.minutes}`.replace(/\s+/g,' ').trim();
+  // en: "quarter past 3", "half past 3" hanno l'ora DOPO
+  if(LANG.slice(0,2)==='en'){
+    if(m===0) phrase=`${L.timeIntro} ${h12} ${L.oclock}`;
+    else if(m===15) phrase=`${L.timeIntro} ${L.quarter} ${h12}`;
+    else if(m===30) phrase=`${L.timeIntro} ${L.half} ${h12}`;
+    else if(m===45){ const nh=((h12%12)+1); phrase=`${L.timeIntro} ${L.threeQuarter} ${nh}`; }
+    else phrase=`${L.timeIntro} ${h12} ${m}`;
+  }
+  return phrase;
+}
+function sayTime(){
+  const txt=timeSentence();
+  clockSpeech.textContent=txt; clockSpeech.hidden=false;
+  if(window.speechSynthesis){ speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt); u.lang=LANG; u.rate=0.9; speechSynthesis.speak(u); }
+  clearTimeout(sayTime._t); sayTime._t=setTimeout(()=>{ clockSpeech.hidden=true; }, 5000);
+}
+document.getElementById('owlHelper').addEventListener('click',e=>{ e.stopPropagation(); sayTime(); });
 phaseMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
   forceDay = b.dataset.ph==='auto' ? null : b.dataset.ph;
   tickClock(); highlightPhase(); phaseMenu.hidden=true;
