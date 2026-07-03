@@ -294,29 +294,30 @@ function draw(){
   const g=ctx.createLinearGradient(0,0,0,H*BASE.horizon); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot));
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H*BASE.horizon);
   const t=performance.now()/1000;
-  // astro: sole di giorno, luna di notte
-  const ax=W*0.82, ay=H*0.15, ar=26*DPR;
-  astro.x=ax; astro.y=ay; astro.r=ar;   // per l'hit-test dell'hover
-  // "ora" percepita per colorare l'astro: reale se auto, stimata dallo slider se manuale
+  // astro: sole di giorno (a destra), luna di notte (a sinistra, lontano dagli alberi)
   const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
-  // notte: da sun.js se disponibile (e non in modalità debug fase), altrimenti soglia fissa
   let isNight;
   if(forceDay===null && typeof solarDay==='function'){ const sd=solarDay(new Date()); isNight = sd ? sd.isNight : (hr>=21||hr<6); }
   else isNight = (hr>=21 || hr<6);
-  astro.night=isNight;
+  const ax = isNight ? W*0.20 : W*0.82;   // luna a sx, sole a dx
+  const ay=H*0.13, ar=26*DPR;
+  astro.x=ax; astro.y=ay; astro.r=ar; astro.night=isNight;   // per l'hit-test dell'hover
   if(isNight){
-    // LUNA: gialla la sera (18-22) e verso l'alba (4-6), bianca a notte fonda
+    // colore luna: sera gialla, notte fonda bianca, pre-alba gialla tenue
     let moon;
-    if(hr>=18&&hr<23) moon=[255,236,170];        // sera: gialla
-    else if(hr>=4&&hr<7) moon=[255,240,190];       // pre-alba: gialla tenue
-    else moon=[236,240,255];                        // notte fonda: bianca
-    // LUNA piena (semplice e sempre corretta su qualsiasi sfondo: cielo o nuvole)
-    ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.fillStyle=`rgba(${moon[0]},${moon[1]},${moon[2]},${0.7+dn*0.3})`; ctx.fill();
-    // qualche cratere tenue
-    ctx.fillStyle=`rgba(0,0,0,0.08)`;
-    ctx.beginPath(); ctx.arc(ax-ar*0.3,ay-ar*0.2,ar*0.18,0,6.29); ctx.fill();
-    ctx.beginPath(); ctx.arc(ax+ar*0.25,ay+ar*0.28,ar*0.13,0,6.29); ctx.fill();
-    ctx.beginPath(); ctx.arc(ax+ar*0.35,ay-ar*0.35,ar*0.10,0,6.29); ctx.fill();
+    if(hr>=18&&hr<23) moon=[255,236,170];
+    else if(hr>=4&&hr<7) moon=[255,240,190];
+    else moon=[236,240,255];
+    // MEZZALUNA: clip sul disco, riempi la luna, poi "mordi" col GRADIENTE del cielo
+    // (non un colore piatto → combacia col cielo, niente pallina/eclissi). Le nuvole passano sopra dopo.
+    ctx.save();
+    ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.clip();
+    ctx.fillStyle=`rgba(${moon[0]},${moon[1]},${moon[2]},${0.9+dn*0.1})`;
+    ctx.fillRect(ax-ar,ay-ar,ar*2,ar*2);                     // disco luna
+    const skg=ctx.createLinearGradient(0,0,0,H*BASE.horizon); skg.addColorStop(0,rgb(top)); skg.addColorStop(1,rgb(bot));
+    ctx.fillStyle=skg;
+    ctx.beginPath(); ctx.arc(ax+ar*0.55,ay-ar*0.20,ar*0.95,0,6.29); ctx.fill();  // morso = colore cielo
+    ctx.restore();
   } else {
     // SOLE: alba giallo chiaro → mezzogiorno giallo pieno → tramonto rosso
     let sun;
