@@ -2,9 +2,9 @@
 
 A cozy 2D soundscape world where a child's invented animal friends roam, play, and fall asleep with the day.
 
-**Live:** it's a single self-contained `index.html` — open it in any modern browser, tap to enter, and explore.
+![Il Mondo di Eliana](screenshot.png)
 
-![Il Mondo di Eliana](https://img.shields.io/badge/version-v1.0-e8443a) ![no build](https://img.shields.io/badge/build-none-blue) ![single file](https://img.shields.io/badge/files-1-brightgreen)
+**Live:** open `index.html` (served) in any modern browser, tap to enter, and explore.
 
 ---
 
