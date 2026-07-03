@@ -84,10 +84,11 @@ function drawCreature(c, sz){
   } else {
     ell(0,0,s*0.9,s*0.7,body);   // fallback: corpo generico
   }
-  // occhi (tranne gufo che li ha già) — chiusi se dorme
+  // occhi (tranne gufo/bruco) — due occhi frontali, chiusi se dorme
   if(S!=='owl' && S!=='caterpillar'){
-    if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08);
-      ctx.beginPath(); ctx.moveTo(s*0.1,-s*0.1); ctx.lineTo(s*0.35,-s*0.1); ctx.stroke(); }
-    else { ell(s*0.28,-s*0.12,s*0.1,s*0.12,'#182530'); }
+    if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08); ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(-s*0.32,-s*0.1); ctx.lineTo(-s*0.10,-s*0.1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo( s*0.10,-s*0.1); ctx.lineTo( s*0.32,-s*0.1); ctx.stroke(); }
+    else { ell(-s*0.22,-s*0.12,s*0.1,s*0.12,'#182530'); ell(s*0.22,-s*0.12,s*0.1,s*0.12,'#182530'); }
   }
 }
