@@ -171,7 +171,7 @@ let day=0.8;
 const beings=[];
 let hoverBeing=null, hoverClearT=0;
 let hoverAstro=false;
-const astro={x:0,y:0,r:0};
+const astro={x:0,y:0,r:0,night:false};
 // hit-test: trova l'animale sotto il punto (coord canvas già in DPR)
 function beingAt(px,py){
   for(let i=beings.length-1;i>=0;i--){ const b=beings[i];
@@ -264,7 +264,9 @@ function draw(){
   astro.x=ax; astro.y=ay; astro.r=ar;   // per l'hit-test dell'hover
   // "ora" percepita per colorare l'astro: reale se auto, stimata dallo slider se manuale
   const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
-  if(dn>0.5){
+  const isNight = (hr>=21 || hr<6);   // luna solo di notte vera; alba/tramonto = sole
+  astro.night=isNight;
+  if(isNight){
     // LUNA: gialla la sera (18-22) e verso l'alba (4-6), bianca a notte fonda
     let moon;
     if(hr>=18&&hr<23) moon=[255,236,170];        // sera: gialla
@@ -327,7 +329,7 @@ function draw(){
   }
   // etichetta sole/luna su hover
   if(hoverAstro && L){
-    const label = dn>0.5 ? (L.moon||'Luna') : (L.sun||'Sole');
+    const label = astro.night ? (L.moon||'Luna') : (L.sun||'Sole');
     ctx.font=`700 ${Math.round(13*DPR)}px system-ui,sans-serif`;
     ctx.textAlign='center'; ctx.textBaseline='top';
     ctx.lineWidth=Math.max(2,3*DPR); ctx.strokeStyle='rgba(0,0,0,.72)'; ctx.lineJoin='round';
