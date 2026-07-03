@@ -310,9 +310,13 @@ function draw(){
     if(hr>=18&&hr<23) moon=[255,236,170];        // sera: gialla
     else if(hr>=4&&hr<7) moon=[255,240,190];       // pre-alba: gialla tenue
     else moon=[236,240,255];                        // notte fonda: bianca
-    ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.fillStyle=`rgba(${moon[0]},${moon[1]},${moon[2]},${0.6+dn*0.4})`; ctx.fill();
-    // mezzaluna: cerchio del colore del cielo che "morde" la luna
-    ctx.beginPath(); ctx.arc(ax+ar*0.5,ay-ar*0.25,ar*0.92,0,6.29); ctx.fillStyle=rgb(top); ctx.fill();
+    // LUNA piena (semplice e sempre corretta su qualsiasi sfondo: cielo o nuvole)
+    ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.fillStyle=`rgba(${moon[0]},${moon[1]},${moon[2]},${0.7+dn*0.3})`; ctx.fill();
+    // qualche cratere tenue
+    ctx.fillStyle=`rgba(0,0,0,0.08)`;
+    ctx.beginPath(); ctx.arc(ax-ar*0.3,ay-ar*0.2,ar*0.18,0,6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(ax+ar*0.25,ay+ar*0.28,ar*0.13,0,6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(ax+ar*0.35,ay-ar*0.35,ar*0.10,0,6.29); ctx.fill();
   } else {
     // SOLE: alba giallo chiaro → mezzogiorno giallo pieno → tramonto rosso
     let sun;
