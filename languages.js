@@ -18,12 +18,13 @@ function resolveLocale(want){
   return hit || null;
 }
 
-// lingua attiva: risolta da initI18n() DOPO che i file locales/*.js si sono registrati
+// lingua attiva: risolta da initI18n() DOPO che i file locales/*.js si sono registrati.
+// Priorità: ?lang= (override sessione) → lingua del BROWSER → default.
+// Nessun salvataggio persistente: ogni device segue la propria lingua browser.
 let LANG = DEFAULT_LOCALE;
 let L = null;
 function initI18n(){
   LANG = resolveLocale(new URLSearchParams(location.search).get('lang'))
-      || resolveLocale(localStorage.getItem('eliana_lang'))
       || resolveLocale(navigator.language)
       || (navigator.languages||[]).map(resolveLocale).find(Boolean)
       || DEFAULT_LOCALE;
@@ -34,10 +35,9 @@ function initI18n(){
 // helper: tipo+descrizione personaggio nella lingua attiva (fallback ai campi type/desc di characters.js)
 function charInfo(c){ const t=(L.chars||{})[c.id]; return t ? t : [c.type, c.desc]; }
 function envName(key){ return (L.envs||{})[key] || key; }
-// passa alla prossima lingua disponibile (ciclo)
+// passa alla prossima lingua disponibile (solo per la sessione corrente, via URL)
 function cycleLang(){
   const codes = Object.keys(I18N);
   const next = codes[(codes.indexOf(LANG)+1) % codes.length];
-  localStorage.setItem('eliana_lang', next);
   location.search = '?lang=' + next;
 }
