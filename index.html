@@ -11,7 +11,7 @@
   html,body { margin:0; height:100%; overflow:hidden; background:var(--bg);
     font-family:system-ui,-apple-system,sans-serif; color:#dfeaf5; user-select:none; }
   [hidden] { display:none !important; }
-  #stage { display:block; width:100vw; height:100vh; touch-action:none; }
+  #stage { display:block; width:100vw; height:100vh; height:100dvh; touch-action:none; }
   #palette { position:fixed; left:0; right:0; bottom:0; display:flex; gap:8px;
     padding:10px 12px; overflow-x:auto; background:rgba(8,16,28,.6);
     backdrop-filter:blur(8px); scrollbar-width:thin; }
@@ -756,7 +756,16 @@ applyI18n();
 
 // disegna il poster all'avvio (e lo ridisegna se ruoti/ridimensioni prima di entrare)
 drawPoster();
-addEventListener('resize',()=>{ if(document.getElementById('poster')) drawPoster(); });
+// ridisegno robusto su resize/fullscreen/rotazione (evita bordi neri dopo F11)
+function relayout(){
+  resize();                                   // ridimensiona il canvas del mondo
+  if(document.getElementById('poster')) drawPoster();
+}
+function relayoutSoon(){ requestAnimationFrame(()=>{ relayout(); requestAnimationFrame(relayout); }); }
+addEventListener('resize', relayoutSoon);
+addEventListener('orientationchange', relayoutSoon);
+document.addEventListener('fullscreenchange', relayoutSoon);
+if(window.visualViewport) window.visualViewport.addEventListener('resize', relayoutSoon);
 </script>
 </body>
 </html>
