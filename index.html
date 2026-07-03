@@ -242,7 +242,7 @@ function stepBeing(b,dt){
   if(b.y<H*0.14){b.y=H*0.14;b.vy=Math.abs(b.vy);} if(b.y>H-m-70){b.y=H-m-70;b.vy=-Math.abs(b.vy);}
   const now=performance.now();
   if(now>b.nextSound){
-    if(awake>0.25 && Math.random()<b.sound.rate*0.5) chirp(b.sound,awake);
+    if(awake>0.25 && Math.random()<b.sound.rate*0.5){ chirp(b.sound,awake); b.glowT=now; } // bagliore quando "parla"
     b.nextSound=now+700+Math.random()*2600/(awake+0.1);
   }
 }
@@ -307,6 +307,16 @@ function draw(){
     const bob=b.motion==='hop'?Math.sin(b.hopT*Math.PI)*b.size*0.5*DPR*(1-b.sleep):0;
     ctx.translate(0,-bob);
     const sz=b.size*DPR*(1-b.sleep*0.15);
+    // bagliore quando "parla" (svanisce in ~600ms) — attira l'attenzione
+    if(b.glowT){ const age=performance.now()-b.glowT;
+      if(age<600){ const k=1-age/600; // 1 → 0
+        const gr=sz*(1.8+1.2*(1-k));   // si espande mentre svanisce
+        const gg=ctx.createRadialGradient(0,0,sz*0.5,0,0,gr);
+        gg.addColorStop(0, hexA(b.colors[0], 0.55*k));
+        gg.addColorStop(1, hexA(b.colors[0], 0));
+        ctx.beginPath(); ctx.arc(0,0,gr,0,6.29); ctx.fillStyle=gg; ctx.fill();
+      } else b.glowT=0;
+    }
     // alone
     ctx.beginPath(); ctx.arc(0,0,sz*1.7,0,6.29); ctx.fillStyle=hexA(b.colors[0],0.10*(1-b.sleep)); ctx.fill();
     ctx.scale(b.face,1);
