@@ -115,6 +115,8 @@
 
 <!-- versione: generata da deploy.sh (git describe) -->
 <script src="version.js"></script>
+<!-- configurazione (nome del bambino, ecc.) -->
+<script src="config.js"></script>
 <!-- contenuto editabile (lingue, personaggi, scenari, forme) -->
 <script src="languages.js"></script>
 <script src="locales/it-IT.js"></script>
@@ -616,9 +618,10 @@ function applyI18n(){
   initI18n();   // risolve LANG + L ora che i locales sono registrati
   document.documentElement.lang=LANG;
   const st=document.getElementById('startText');
-  if(st){ st.querySelector('h1').textContent=L.title; st.querySelector('p').textContent=L.enter; }
-  document.title = L.title;
-  const it2=document.getElementById('infoTitle'); if(it2) it2.textContent=L.title;
+  const title = (L.title||'{name}').replace('{name}', CONFIG.childName);
+  if(st){ st.querySelector('h1').textContent=title; st.querySelector('p').textContent=L.enter; }
+  document.title = title;
+  const it2=document.getElementById('infoTitle'); if(it2) it2.textContent=title;
   document.getElementById('infoIntro').textContent=L.friendsIntro;
   document.getElementById('clear').title=L.clear;
   document.getElementById('infoBtn').title=L.friends;
