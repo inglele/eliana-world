@@ -307,11 +307,24 @@ function draw(){
   }
   // astro: sole di giorno (a destra), luna di notte (a sinistra, lontano dagli alberi)
   const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
-  let isNight;
-  if(forceDay===null && typeof solarDay==='function'){ const sd=solarDay(new Date()); isNight = sd ? sd.isNight : (hr>=21||hr<6); }
+  let isNight, sunrise=6, sunset=21;
+  if(forceDay===null && typeof solarDay==='function'){ const sd=solarDay(new Date()); if(sd){ isNight=sd.isNight; sunrise=sd.sunrise; sunset=sd.sunset; } else isNight=(hr>=21||hr<6); }
   else isNight = (hr>=21 || hr<6);
-  const ax = isNight ? W*0.20 : W*0.82;   // luna a sx, sole a dx
-  const ay=H*0.13, ar=26*DPR;
+  // l'astro percorre un ARCO nel cielo: sorge a est → zenit → tramonta a ovest.
+  // sole: frazione tra alba e tramonto. luna: frazione lungo la notte (tramonto→alba).
+  let frac;
+  if(isNight){
+    const nightLen=(24-sunset)+sunrise;
+    let e=hr>=sunset ? hr-sunset : (24-sunset)+hr;   // ore dal tramonto
+    frac=nightLen>0 ? e/nightLen : 0.5;
+  } else {
+    const dayLen=sunset-sunrise;
+    frac=dayLen>0 ? (hr-sunrise)/dayLen : 0.5;
+  }
+  frac=Math.max(0,Math.min(1,frac));
+  const ar=26*DPR;
+  const ax = W*(0.12 + frac*0.76);                 // da sinistra (est) a destra (ovest)
+  const ay = H*(0.34 - Math.sin(frac*Math.PI)*0.24); // arco: più alto a metà percorso (zenit)
   astro.x=ax; astro.y=ay; astro.r=ar; astro.night=isNight;   // per l'hit-test dell'hover
   if(isNight){
     // colore luna: sera gialla, notte fonda bianca, pre-alba gialla tenue
