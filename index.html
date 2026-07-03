@@ -162,7 +162,7 @@
 //    • creatures.js     → le forme dei corpi (drawCreature)
 //  Questo file = impianto: audio, movimento, orologio, render, loop.
 //  ponytail: zero dipendenze, audio sintetizzato, canvas 2D.
-//  (CAST, BYID, ENVS, curEnv, drawCreature, I18N/L/charInfo arrivano dai file sopra.)
+//  (CAST, BYID, BASE, LAYERS, drawCreature, I18N/L/charInfo arrivano dai file sopra.)
 // ═══════════════════════════════════════════════════════════════════
 // APP_VERSION arriva da version.js (generato da deploy.sh via git describe).
 const APP_VERSION = (typeof window!=='undefined' && window.APP_VERSION) ? window.APP_VERSION : 'dev';
@@ -237,8 +237,13 @@ function buildAmbient(){
 }
 function applyEnvAudio(){
   if(!ambLP) return;
-  const a=ENVS[curEnv].amb; ambLP.frequency.value=a.cut; ambGain.gain.value=a.g;
+  // somma dei layer natura attivi: volume totale + cutoff medio pesato
+  let g=0, cutSum=0, cutW=0;
+  for(const k in LAYERS){ const Lr=LAYERS[k]; if(Lr.on && Lr.amb){ g+=Lr.amb.g; if(Lr.amb.cut>0){ cutSum+=Lr.amb.cut*Lr.amb.g; cutW+=Lr.amb.g; } } }
+  ambLP.frequency.value = cutW>0 ? cutSum/cutW : 600;
+  ambGain.gain.value = Math.min(0.2, g);
 }
+function ambBaseGain(){ let g=0; for(const k in LAYERS){ const Lr=LAYERS[k]; if(Lr.on&&Lr.amb) g+=Lr.amb.g; } return Math.min(0.2,g); }
 function chirp(sound,vol=1){
   if(!AC) return;
   const t=AC.currentTime, o=AC.createOscillator(); o.type=sound.type;
@@ -282,10 +287,11 @@ function stepBeing(b,dt){
 // ── RENDER scena ───────────────────────────────────────────────────
 let ripples=[]; for(let i=0;i<7;i++) ripples.push({x:Math.random(),y:Math.random()*0.4+0.55,sp:0.1+Math.random()*0.2});
 function draw(){
-  const E=ENVS[curEnv], dn=1-day;   // dn = quanto è notte (0=giorno pieno, 1=notte fonda)
-  const top=mix(E.sky[0],E.night[0],dn), bot=mix(E.sky[1],E.night[1],dn);
-  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot));
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const dn=1-day;   // dn = quanto è notte (0=giorno pieno, 1=notte fonda)
+  // CIELO base
+  const top=mix(BASE.skyDay[0],BASE.skyNight[0],dn), bot=mix(BASE.skyDay[1],BASE.skyNight[1],dn);
+  const g=ctx.createLinearGradient(0,0,0,H*BASE.horizon); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot));
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H*BASE.horizon);
   const t=performance.now()/1000;
   // astro: sole di giorno, luna di notte
   const ax=W*0.82, ay=H*0.15, ar=26*DPR;
@@ -318,19 +324,58 @@ function draw(){
     ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(ax,ay,ar*2.2,0,6.29); ctx.fill();
     ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.fillStyle=`rgb(${sun[0]},${sun[1]},${sun[2]})`; ctx.fill();
   }
-  // acqua
-  if(E.water){
-    ctx.strokeStyle=`rgba(255,255,255,${0.05+0.05*dn})`; ctx.lineWidth=1*DPR;
-    for(const rp of ripples){ const yy=H*rp.y+Math.sin(t*rp.sp*6+rp.x*9)*4*DPR;
+  // ===== ELEMENTI NATURA (layer fissi, combinabili) =====
+  const H0=H*BASE.horizon;
+  // MONTAGNE (dietro l'orizzonte, in fondo)
+  if(LAYERS.montagne.on){
+    const mc=mix([120,130,150],[30,40,66],dn);
+    const peaks=[[0.12,0.20],[0.30,0.32],[0.52,0.24],[0.72,0.34],[0.90,0.22]];
+    for(const p of peaks){ const x=p[0]*W, hh=H0*p[1];
+      ctx.fillStyle=rgb(mc);
+      ctx.beginPath(); ctx.moveTo(x-hh*1.3,H0); ctx.lineTo(x,H0-hh); ctx.lineTo(x+hh*1.3,H0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle=`rgba(255,255,255,${0.5-0.3*dn})`;
+      ctx.beginPath(); ctx.moveTo(x-hh*0.3,H0-hh*0.75); ctx.lineTo(x,H0-hh); ctx.lineTo(x+hh*0.3,H0-hh*0.75); ctx.closePath(); ctx.fill();
+    }
+  }
+  // PRATO base (terra)
+  const gc=mix(BASE.groundDay,BASE.groundNight,dn);
+  ctx.fillStyle=rgb(gc); ctx.fillRect(0,H0,W,H-H0);
+  // MARE (fascia bassa)
+  if(LAYERS.mare.on){
+    const seaTop=H*0.80, sc=mix([70,140,195],[10,28,60],dn);
+    ctx.fillStyle=rgb(sc); ctx.fillRect(0,seaTop,W,H-seaTop);
+    ctx.strokeStyle=`rgba(255,255,255,${0.08+0.06*dn})`; ctx.lineWidth=1*DPR;
+    for(const rp of ripples){ const yy=seaTop+(H-seaTop)*rp.y+Math.sin(t*rp.sp*6+rp.x*9)*4*DPR;
       ctx.beginPath(); for(let x=0;x<=W;x+=16*DPR){ const y=yy+Math.sin(x/W*8+t*rp.sp*4+rp.x*10)*3*DPR; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
   }
-  // alberi (silhouette semplice sul fondo)
-  if(E.trees){
-    ctx.fillStyle=`rgba(0,0,0,${0.18+0.25*dn})`;
-    for(let i=0;i<6;i++){ const x=(i+0.5)/6*W, hh=H*(0.16+((i*7)%5)/20);
-      ctx.beginPath(); ctx.moveTo(x,H); ctx.lineTo(x-hh*0.5,H-hh*0.5); ctx.lineTo(x-hh*0.2,H-hh*0.5);
-      ctx.lineTo(x-hh*0.6,H-hh); ctx.lineTo(x,H-hh*1.3); ctx.lineTo(x+hh*0.6,H-hh);
-      ctx.lineTo(x+hh*0.2,H-hh*0.5); ctx.lineTo(x+hh*0.5,H-hh*0.5); ctx.closePath(); ctx.fill(); }
+  // LAGHETTO (a sinistra)
+  if(LAYERS.laghetto.on){
+    const lx=W*0.22, ly=H*0.82, lrx=W*0.20, lry=H*0.09, wc=mix([90,165,215],[12,32,66],dn);
+    ctx.beginPath(); ctx.ellipse(lx,ly,lrx,lry,0,0,6.2832); ctx.fillStyle=rgb(wc); ctx.fill();
+    ctx.strokeStyle=`rgba(255,255,255,${0.10+0.06*dn})`; ctx.lineWidth=1*DPR;
+    for(let i=1;i<=3;i++){ const ry2=lry*(i/4)+Math.sin(t*0.8+i)*1.5*DPR;
+      ctx.beginPath(); ctx.ellipse(lx,ly,lrx*(i/4)*1.4,ry2,0,0,6.2832); ctx.stroke(); }
+  }
+  // BOSCO (alberi a destra, ondeggiano)
+  if(LAYERS.bosco.on){
+    const tc=mix([40,110,60],[8,30,20],dn), trunk=mix([90,60,35],[20,16,12],dn);
+    for(let i=0;i<5;i++){ const x=W*(0.62+i*0.09), hh=H*(0.14+((i*7)%5)/28), sway=Math.sin(t*0.8+i*1.3)*hh*0.05;
+      ctx.fillStyle=rgb(trunk); ctx.fillRect(x-hh*0.06, H0-hh*0.1, hh*0.12, hh*0.5);
+      ctx.fillStyle=rgb(tc);
+      ctx.beginPath(); ctx.moveTo(x-hh*0.5,H0); ctx.lineTo(x+sway,H0-hh*1.1); ctx.lineTo(x+hh*0.5,H0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x-hh*0.4,H0-hh*0.4); ctx.lineTo(x+sway*0.7,H0-hh*1.35); ctx.lineTo(x+hh*0.4,H0-hh*0.4); ctx.closePath(); ctx.fill();
+    }
+  }
+  // FIORI (sparsi sul prato)
+  if(LAYERS.fiori.on){
+    const cols=['#ff6a8a','#ffd23a','#c79bff','#ff9ecb','#7fe0a0'];
+    for(let i=0;i<18;i++){ const x=((i*53)%100)/100*W, y=H0+((i*37)%100)/100*(H-H0)*0.85+(H-H0)*0.05;
+      const sway=Math.sin(t*1.2+i)*2*DPR, col=cols[i%cols.length];
+      ctx.strokeStyle=rgb(mix([70,140,70],[16,40,24],dn)); ctx.lineWidth=1.5*DPR;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+sway,y-8*DPR); ctx.stroke();
+      ctx.globalAlpha=1-dn*0.5; ctx.fillStyle=col;
+      ctx.beginPath(); ctx.arc(x+sway,y-9*DPR,3*DPR,0,6.2832); ctx.fill(); ctx.globalAlpha=1;
+    }
   }
   // personaggi
   for(const b of beings){
@@ -391,7 +436,7 @@ function loop(now){
   if(hoverClearT && now>hoverClearT){ hoverBeing=null; hoverAstro=false; hoverClearT=0; } // scade il tap-label
   const wantSleep=day<0.35?1:(day<0.5?(0.5-day)/0.15:0);
   for(const b of beings){ b.sleep+=(wantSleep-b.sleep)*0.02; stepBeing(b,dt); }
-  if(ambGain){ const base=ENVS[curEnv].amb.g; ambGain.gain.value=base+(1-day)*0.04; }
+  if(ambGain){ ambGain.gain.value=ambBaseGain()+(1-day)*0.04; }
   draw(); requestAnimationFrame(loop);
 }
 
@@ -432,10 +477,9 @@ function tr(g,x1,y1,x2,y2,x3,y3,f){ g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,
 
 function buildEnvButtons(){
   const box=document.getElementById('env');
-  Object.entries(ENVS).forEach(([k,e])=>{
-    const b=document.createElement('button'); b.className='envbtn'+(k===curEnv?' active':''); b.textContent=envName(k);
-    b.addEventListener('click',()=>{ curEnv=k; applyEnvAudio();
-      document.querySelectorAll('.envbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+  Object.entries(LAYERS).forEach(([k,layer])=>{
+    const b=document.createElement('button'); b.className='envbtn'+(layer.on?' active':''); b.textContent=envName(k);
+    b.addEventListener('click',()=>{ layer.on=!layer.on; b.classList.toggle('active',layer.on); applyEnvAudio(); });
     box.appendChild(b);
   });
 }

@@ -25,7 +25,7 @@ I18N['en-US'] = {
   and: '',
   minutes: 'minutes',
   phases: { alba:'🌅 Dawn', giorno:'🌞 Day', tramonto:'🌇 Sunset', notte:'🌙 Night', auto:'🕒 Auto (real time)' },
-  envs: { acqua:'🌊 Pond', foresta:'🌲 Forest', spiaggia:'🏖 Beach', parco:'🌳 Park', casa:'🏠 Home' },
+  envs: { montagne:'⛰️ Mountains', bosco:'🌲 Forest', laghetto:'💧 Pond', mare:'🌊 Sea', fiori:'🌸 Flowers' },
   chars: {
     maddalena:['Cat',        'Giant red cat with a super-fluffy tail: loves popcorn and obstacle courses.'],
     catto:    ['Kitten',     'Tiny blue cat: picky-turned-brave, does the super-duper-mega-purr.'],

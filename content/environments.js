@@ -1,21 +1,28 @@
 // ═══════════════════════════════════════════════════════════════════
-//  AMBIENTI (SCENARI) — Il Mondo di Eliana
-//  Per AGGIUNGERE uno scenario: copia una riga e cambia i campi.
-//  Campi:
-//    chiave   id interno (es. "acqua") — usato dai personaggi nel campo env
-//    name     etichetta col simbolo, mostrata nel bottone
-//    sky      colori cielo di GIORNO [alto, basso] in [R,G,B]
-//    night    colori cielo di NOTTE  [alto, basso] in [R,G,B]
-//    water    true = disegna riflessi d'acqua/onde (opzionale)
-//    trees    true = disegna alberi silhouette sul fondo (opzionale)
-//    amb      suono ambientale: {cut: taglio filtro Hz (più basso = più ovattato), g: volume 0..1}
+//  AMBIENTE — Il Mondo di Eliana
+//  Il mondo è UNO SOLO (cielo + prato). Gli elementi naturali qui sotto
+//  si accendono/spengono con gli interruttori in basso e si combinano.
+//  Sono in posizione FISSA. Solo natura.
+//  Campi layer:
+//    name  etichetta col simbolo (mostrata sull'interruttore; testo tradotto in locales)
+//    on    acceso all'avvio?
+//    amb   suono ambientale {cut: filtro Hz, g: volume 0..1}. Sommati se più attivi.
 // ═══════════════════════════════════════════════════════════════════
 
-const ENVS = {
-  acqua:    {name:'🌊 Laghetto', sky:[[80,150,210],[40,105,150]],  night:[[8,16,34],[6,26,52]],  water:true,  amb:{cut:520, g:0.12}},
-  foresta:  {name:'🌲 Foresta',  sky:[[110,175,150],[60,120,90]],  night:[[10,22,20],[8,30,26]],  trees:true,  amb:{cut:900, g:0.09}},
-  spiaggia: {name:'🏖 Spiaggia', sky:[[150,200,230],[220,200,160]],night:[[20,30,50],[40,44,60]], water:true,  amb:{cut:620, g:0.11}},
-  parco:    {name:'🌳 Parco',    sky:[[130,190,225],[110,170,110]],night:[[12,22,38],[14,34,28]], trees:true,  amb:{cut:1000,g:0.08}},
-  casa:     {name:'🏠 Casa',     sky:[[70,90,120],[120,110,140]],  night:[[18,18,30],[30,26,40]],               amb:{cut:400, g:0.06}},
+// Base sempre presente: cielo + prato (colori giorno e notte)
+const BASE = {
+  skyDay:   [[135,195,235],[200,225,245]],   // [alto, basso]
+  skyNight: [[8,16,38],[16,28,58]],
+  groundDay:  [96,165,92],
+  groundNight:[16,40,26],
+  horizon: 0.62,   // frazione di altezza dove finisce il cielo e inizia il prato
 };
-let curEnv = 'acqua';   // ambiente iniziale
+
+// Elementi natura (ordine = ordine interruttori). key usato in personaggi (campo env) e audio.
+const LAYERS = {
+  montagne: { name:'⛰️ Montagne', on:false, amb:{cut:280, g:0.03} },
+  bosco:    { name:'🌲 Bosco',    on:true,  amb:{cut:900, g:0.09} },
+  laghetto: { name:'💧 Laghetto', on:true,  amb:{cut:520, g:0.11} },
+  mare:     { name:'🌊 Mare',     on:false, amb:{cut:620, g:0.12} },
+  fiori:    { name:'🌸 Fiori',    on:false, amb:{cut:0,   g:0.0 } },
+};

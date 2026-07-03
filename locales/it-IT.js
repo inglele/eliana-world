@@ -25,7 +25,7 @@ I18N['it-IT'] = {
   and: 'e',
   minutes: 'minuti',
   phases: { alba:'🌅 Alba', giorno:'🌞 Giorno', tramonto:'🌇 Tramonto', notte:'🌙 Notte', auto:'🕒 Auto (ora reale)' },
-  envs: { acqua:'🌊 Laghetto', foresta:'🌲 Foresta', spiaggia:'🏖 Spiaggia', parco:'🌳 Parco', casa:'🏠 Casa' },
+  envs: { montagne:'⛰️ Montagne', bosco:'🌲 Bosco', laghetto:'💧 Laghetto', mare:'🌊 Mare', fiori:'🌸 Fiori' },
   chars: {
     maddalena:['Gatta',      'Gatta rossa gigante dalla coda super soffice: adora popcorn e percorsi a ostacoli.'],
     catto:    ['Gattino',    'Micio blu minuscolo: da schizzinoso a coraggioso, fa il super-duper-mega-fusa.'],
