@@ -1,0 +1,9 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# extracted source text (book) — kept private, not part of the app
+paws-text.txt
+*.pdf

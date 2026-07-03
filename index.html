@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Il Mondo di Eliana</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%235aa9ff'/%3E%3Cstop offset='1' stop-color='%230e2f52'/%3E%3C/linearGradient%3E%3CclipPath id='c'%3E%3Ccircle cx='32' cy='32' r='30'/%3E%3C/clipPath%3E%3C/defs%3E%3Cg clip-path='url(%23c)'%3E%3Crect width='64' height='64' fill='url(%23sky)'/%3E%3Ccircle cx='46' cy='18' r='6' fill='%23ffe9a8'/%3E%3Cpath d='M2 38q8-3 15 0t15 0 15 0 15 0' stroke='%23bfe3ff' stroke-width='1.6' fill='none' opacity='.5'/%3E%3Cpath d='M0 46q8-3 16 0t16 0 16 0 16 0' stroke='%23bfe3ff' stroke-width='1.6' fill='none' opacity='.4'/%3E%3Cg%3E%3Cellipse cx='30' cy='40' rx='16' ry='5' fill='%23ffd23a'/%3E%3Cellipse cx='45' cy='40' rx='7' ry='3' fill='%23ffd23a'/%3E%3Cpath d='M18 36l3-4 3 4zM26 36l3-4 3 4zM34 36l3-4 3 4z' fill='%23e0b020'/%3E%3Ccircle cx='45' cy='38' r='1.4' fill='%23173' /%3E%3C/g%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='30' fill='none' stroke='%23ffffff' stroke-opacity='.25' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root { --bg:#0a1a2a; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; overflow:hidden; background:var(--bg);
+    font-family:system-ui,-apple-system,sans-serif; color:#dfeaf5; user-select:none; }
+  [hidden] { display:none !important; }
+  #stage { display:block; width:100vw; height:100vh; touch-action:none; }
+  #palette { position:fixed; left:0; right:0; bottom:0; display:flex; gap:8px;
+    padding:10px 12px; overflow-x:auto; background:rgba(8,16,28,.6);
+    backdrop-filter:blur(8px); scrollbar-width:thin; }
+  .chip { flex:0 0 auto; width:60px; height:66px; border:none; border-radius:14px;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; background:rgba(255,255,255,.06); color:#cfe0f0; font-size:10px; padding:4px; }
+  .chip:active { transform:scale(.9); }
+  .chip canvas { width:38px; height:38px; }
+  .chip span { white-space:nowrap; opacity:.85; }
+  #top { position:fixed; top:12px; left:12px; right:12px; display:flex; align-items:center; gap:12px; z-index:5; }
+  #day { flex:1; accent-color:#e8443a; max-width:340px; }
+  #label { font-size:13px; opacity:.8; min-width:78px; }
+  #env { display:flex; gap:6px; }
+  .envbtn { border:none; border-radius:10px; padding:5px 9px; font-size:12px; cursor:pointer;
+    background:rgba(255,255,255,.08); color:#cfe0f0; }
+  .envbtn.active { background:rgba(232,68,58,.4); }
+  #clear { border:none; border-radius:10px; padding:5px 9px; font-size:12px; cursor:pointer;
+    background:rgba(255,120,120,.18); color:#ffd6d6; }
+  #infoBtn { border:none; border-radius:50%; width:30px; height:30px; font-size:17px; cursor:pointer;
+    background:rgba(255,255,255,.1); color:#cfe0f0; line-height:1; }
+  #clockBtn { border:none; border-radius:10px; padding:5px 9px; font-size:12px; cursor:pointer;
+    background:rgba(255,255,255,.08); color:#cfe0f0; white-space:nowrap; }
+  #clockBtn.auto { background:rgba(127,178,255,.32); color:#eaf2fb; }
+  #infoModal { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+    background:rgba(4,10,18,.6); backdrop-filter:blur(4px); padding:16px; }
+  #infoCard { background:#0f2136; border:1px solid rgba(255,255,255,.12); border-radius:16px;
+    width:min(560px,100%); max-height:86vh; display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  #infoHead { display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,.08); }
+  #infoHead b { color:#ff6a5a; }
+  #infoVer { font-size:12px; opacity:.55; margin-left:4px; }
+  #infoClose { border:none; background:rgba(255,255,255,.08); color:#cfe0f0; border-radius:8px;
+    width:30px; height:30px; cursor:pointer; font-size:14px; }
+  #infoIntro { margin:12px 16px 6px; font-size:13px; opacity:.7; }
+  #infoTableWrap { overflow-y:auto; padding:0 12px 14px; }
+  #infoTable { width:100%; border-collapse:collapse; }
+  #infoTable td { padding:8px 6px; vertical-align:middle; border-bottom:1px solid rgba(255,255,255,.06); }
+  #infoTable td.pic { width:52px; }
+  #infoTable canvas { width:44px; height:44px; display:block; }
+  #infoTable .nm { font-weight:600; color:#eaf2fb; }
+  #infoTable .tp { font-size:11px; color:#8fb2d8; }
+  #infoTable .ds { font-size:12px; opacity:.8; line-height:1.35; }
+  #clockModal { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+    background:rgba(4,10,18,.6); backdrop-filter:blur(4px); padding:16px; }
+  #clockCard { position:relative; background:#0f2136; border:1px solid rgba(255,255,255,.12);
+    border-radius:20px; padding:22px; display:flex; flex-direction:column; align-items:center; gap:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  #clockClose { position:absolute; top:10px; right:10px; border:none; background:rgba(255,255,255,.08);
+    color:#cfe0f0; border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px; }
+  #clockCanvas { width:min(74vw,320px); height:min(74vw,320px); }
+  #clockDigital { font-size:26px; font-weight:700; letter-spacing:2px; color:#eaf2fb; font-variant-numeric:tabular-nums; }
+  #start { position:fixed; inset:0; z-index:10; cursor:pointer; overflow:hidden;
+    transition:opacity .9s ease; }
+  #poster { position:absolute; inset:0; width:100%; height:100%; display:block;
+    transition:transform 1s cubic-bezier(.6,0,.35,1); transform-origin:center 50%; will-change:transform; }
+  #startText { position:absolute; left:0; right:0; top:46%; transform:translateY(-50%); text-align:center;
+    pointer-events:none; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+  #startText h1 { font-weight:700; letter-spacing:.5px; margin:0; color:#ff6a5a; font-size:clamp(24px,6vw,44px);
+    transition:opacity .35s ease; }
+  #startText p { opacity:.85; font-size:14px; margin:6px 0 0; transition:opacity .35s ease; }
+  #start.zoom { opacity:0; pointer-events:none; }
+  #start.zoom #startText h1, #start.zoom #startText p { opacity:0; }
+  #start.zoom #poster { transform:scale(6); }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="top" hidden>
+  <button id="clockBtn" title="Che ore sono?">🕒 <span id="clockTime">--:--</span></button>
+  <span id="label">🌞 Giorno</span>
+  <input id="day" type="range" min="0" max="100" value="20" aria-label="Ora del giorno">
+  <div id="env"></div>
+  <button id="clear" title="Svuota">🧹</button>
+  <button id="infoBtn" title="Gli amici" aria-label="Info">ⓘ</button>
+</div>
+
+<div id="infoModal" hidden>
+  <div id="infoCard">
+    <div id="infoHead">
+      <div><b>Il Mondo di Eliana</b> <span id="infoVer"></span></div>
+      <button id="infoClose" aria-label="Chiudi">✕</button>
+    </div>
+    <p id="infoIntro">Gli amici che vivono nel mondo:</p>
+    <div id="infoTableWrap"><table id="infoTable"><tbody></tbody></table></div>
+  </div>
+</div>
+
+<div id="clockModal" hidden>
+  <div id="clockCard">
+    <button id="clockClose" aria-label="Chiudi">✕</button>
+    <canvas id="clockCanvas" width="320" height="320"></canvas>
+    <div id="clockDigital">--:--</div>
+  </div>
+</div>
+
+<div id="palette" hidden></div>
+
+<div id="start"><canvas id="poster"></canvas><div id="startText"><h1>Il Mondo di Eliana</h1><p>tocca per entrare</p></div></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  IL MONDO DI ELIANA — v1 (2D canvas + Web Audio procedurale)
+//  Cast reale dal libro "Paws, Purrs and Tales 2026" (personaggi di Eliana).
+//  Stile: forme geometriche stilizzate (à la murmur.living), NON le immagini del libro.
+//  Personalità = 5 attributi (forma via species, colore, velocità, movimento, suono).
+//  Notte → i personaggi DORMONO (solo ambiente).
+//  ponytail: 1 file, zero dipendenze, audio sintetizzato.
+// ═══════════════════════════════════════════════════════════════════
+
+// ── CAST: personaggi canonici (colori/carattere dal libro) ─────────
+// motion: wander|float|dart|hop|crawl   sound:{type,base,rate(ev/s)}
+// species → silhouette. colors[0]=corpo, [1]=accento, [2]=extra.
+const CAST = [
+  {id:'maddalena', name:'Maddalena', species:'cat',   colors:['#e8443a','#ffd7a0'], size:32, speed:0.75, motion:'hop',   sound:{type:'triangle',base:210,rate:0.28}, env:'casa'},
+  {id:'catto',     name:'Catto',     species:'cat',   colors:['#5aa9ff','#dff0ff'], size:15, speed:0.5,  motion:'dart',  sound:{type:'sine',    base:520,rate:0.16}, env:'casa'},
+  {id:'gallo',     name:'Gallo',     species:'cat',   colors:['#9b6a44','#e8443a','#4f8bff'], size:22, speed:0.4, motion:'wander', sound:{type:'sawtooth',base:300,rate:0.2}, env:'acqua'},
+  {id:'ciuffo',    name:'Ciuffo',    species:'horse', colors:['#e0662f','#c23b2a','#b98a52'], size:32, speed:0.8, motion:'dart', sound:{type:'sawtooth',base:180,rate:0.14}, env:'spiaggia'},
+  {id:'ciuffa',    name:'Ciuffa',    species:'horse', colors:['#eef0f5','#ffe27a','#7fb2ff'], size:32, speed:0.72, motion:'wander', sound:{type:'sawtooth',base:200,rate:0.14}, env:'spiaggia'},
+  {id:'grunt',     name:'Grunt',     species:'gorilla',colors:['#4f7fe0','#bcd2ff'], size:36, speed:0.5,  motion:'hop',   sound:{type:'square',  base:120,rate:0.2},  env:'casa'},
+  {id:'henry',     name:'Henry',     species:'hedgehog',colors:['#8a6a4a','#d8b088'], size:13, speed:0.62, motion:'dart', sound:{type:'square',  base:1100,rate:0.22},env:'parco'},
+  {id:'peppa',     name:'Peppa',     species:'squirrel',colors:['#7fb2ff','#ff9ecb'], size:14, speed:0.55, motion:'hop', sound:{type:'sine',    base:800,rate:0.2},  env:'foresta'},
+  {id:'tinto',     name:'Tinto',     species:'squirrel',colors:['#6fd06f','#4f8bff'], size:14, speed:0.55, motion:'hop', sound:{type:'sine',    base:760,rate:0.2},  env:'foresta'},
+  {id:'tutti',     name:'Tutti',     species:'croc',   colors:['#ffd23a','#e0b020'], size:30, speed:0.24, motion:'wander', sound:{type:'sine',  base:150,rate:0.1},  env:'acqua'},
+  {id:'jugi',      name:'Jugi',      species:'dog',    colors:['#d63a3a','#ffd0d0'], size:20, speed:0.52, motion:'hop',  sound:{type:'square',  base:340,rate:0.2},  env:'casa'},
+  {id:'jugetta',   name:'Jugetta',   species:'dog',    colors:['#8fd0ff','#eaf6ff'], size:20, speed:0.46, motion:'wander', sound:{type:'square',base:400,rate:0.2}, env:'casa'},
+  {id:'caterina',  name:'Caterina',  species:'wolf',   colors:['#4f7fe0','#e8443a'], size:24, speed:0.62, motion:'dart', sound:{type:'sawtooth',base:260,rate:0.14},env:'foresta'},
+  {id:'tata',      name:'Tata',      species:'wolf',   colors:['#e0662f','#ffd23a','#9b6a44'], size:22, speed:0.5, motion:'hop', sound:{type:'triangle',base:220,rate:0.16},env:'foresta'},
+  {id:'giacomo',   name:'Giacomo',   species:'caterpillar',colors:['#ff5a5a','#ffd23a','#6fd06f','#7fb2ff'], size:16, speed:0.3, motion:'crawl', sound:{type:'sine',base:600,rate:0.08},env:'casa'},
+  {id:'george',    name:'George',    species:'monkey', colors:['#ffd23a','#e0902f'], size:14, speed:0.5,  motion:'hop',  sound:{type:'triangle',base:700,rate:0.18},env:'casa'},
+  {id:'poppy',     name:'Poppy',     species:'monkey', colors:['#e8443a','#e0902f'], size:14, speed:0.35, motion:'float',sound:{type:'sine',   base:640,rate:0.12},env:'casa'},
+  {id:'momo',      name:'Momo',      species:'owl',    colors:['#b98a52','#ffe27a'], size:22, speed:0.3,  motion:'float',sound:{type:'sine',   base:340,rate:0.14},env:'foresta'},
+  {id:'jack',      name:'Jack',      species:'dog',    colors:['#9a5ad6','#e0c0ff'], size:20, speed:0.5,  motion:'dart', sound:{type:'sawtooth',base:280,rate:0.18},env:'casa'},
+  {id:'patpat',    name:'Patpat',    species:'bear',   colors:['#efe0c8','#d8c5a0'], size:32, speed:0.2,  motion:'wander',sound:{type:'sine',   base:180,rate:0.08},env:'casa'},
+  {id:'frullato',  name:'Frullato',  species:'cow',    colors:['#f2e9d8','#d8b8a0'], size:24, speed:0.3,  motion:'float',sound:{type:'sine',   base:240,rate:0.1}, env:'casa'},
+];
+const BYID = Object.fromEntries(CAST.map(c=>[c.id,c]));
+
+// ── INFO: tipo (IT) + descrizione breve per il doc "amici" ─────────
+const INFO = {
+  maddalena:['Gatta','Gatta rossa gigante dalla coda super soffice: adora popcorn e percorsi a ostacoli.'],
+  catto:['Gattino','Micio blu minuscolo: da schizzinoso a coraggioso, fa il super-duper-mega-fusa.'],
+  gallo:['Gatto','Gatto dal mento rosso e coda blu piumosa: vive su una barca e ha una voce fortissima.'],
+  ciuffo:['Cavallo','Cavallo a macchie tramonto: impetuoso e giocherellone, ama spiaggia e parco.'],
+  ciuffa:['Cavalla','Cavalla a macchie arcobaleno: vivace e curiosa, migliore amica di Ciuffo.'],
+  grunt:['Gorilla','Gorilla blu grande e rimbalzante: pieno di energia, impara a lanciare solo cose sicure.'],
+  henry:['Riccio','Riccetto super-eccitabile: ama i giri in macchina e fa la danza a patata.'],
+  peppa:['Scoiattola','Scoiattolina zucchero filato: giocosa e disordinata, poi impara a riordinare.'],
+  tinto:['Scoiattolo','Scoiattolino verde e blu: gemello di Peppa, impila pigne e fa il supereroe.'],
+  tutti:['Coccodrillo','Coccodrillo giallo gentile e sereno: aiuta gli amici stando loro vicino.'],
+  jugi:['Cane','Cagnolino rosso ciliegia: giocoso e competitivo, poi impara a condividere.'],
+  jugetta:['Cagnolina','Cagnolina azzurro cielo: gemella di Jugi, costruisce torri di blocchi.'],
+  caterina:['Lupa','Lupa dal mantello blu e rosso: birichina, poi impara a essere generosa.'],
+  tata:['Lupa','Lupetta autunno: sorella minore, suona il tamburo con ritmi buffi.'],
+  giacomo:['Bruco','Bruco arcobaleno timido e sensibile: vive in un barattolo di Dido.'],
+  george:['Scimmietta','Marmoset saggio e buffo: insegna il trucco fermati-respira-stringi.'],
+  poppy:['Scimmietta','Marmoset dolce e calma: mostra il respiro profondo con le guance a palloncino.'],
+  momo:['Gufo','Gufo di bronzo dagli occhioni dorati: intelligente, raccoglie i pensieri felici.'],
+  jack:['Cane','Cane viola giocosissimo: si arrabbia in fretta ma impara a calmarsi come le bolle.'],
+  patpat:['Orso','Orsetto morbido come marshmallow: coccolone, impara a dormire da solo.'],
+  frullato:['Mucca','Mucca di peluche profumata di vaniglia: Protettrice della Notte, scaccia gli incubi.'],
+};
+const APP_VERSION = 'v1.0';
+
+// ── AMBIENTI ───────────────────────────────────────────────────────
+const ENVS = {
+  acqua:    {name:'🌊 Laghetto', sky:[[80,150,210],[40,105,150]], night:[[8,16,34],[6,26,52]], water:true,  amb:{cut:520,g:0.12}},
+  foresta:  {name:'🌲 Foresta',  sky:[[110,175,150],[60,120,90]], night:[[10,22,20],[8,30,26]], trees:true, amb:{cut:900,g:0.09}},
+  spiaggia: {name:'🏖 Spiaggia', sky:[[150,200,230],[220,200,160]], night:[[20,30,50],[40,44,60]], water:true, amb:{cut:620,g:0.11}},
+  parco:    {name:'🌳 Parco',    sky:[[130,190,225],[110,170,110]], night:[[12,22,38],[14,34,28]], trees:true, amb:{cut:1000,g:0.08}},
+  casa:     {name:'🏠 Casa',     sky:[[70,90,120],[120,110,140]], night:[[18,18,30],[30,26,40]], amb:{cut:400,g:0.06}},
+};
+let curEnv = 'acqua';
+
+// ── CANVAS ─────────────────────────────────────────────────────────
+const cv = document.getElementById('stage'); let ctx = cv.getContext('2d');
+let W,H,DPR;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  W=cv.width=innerWidth*DPR; H=cv.height=innerHeight*DPR;
+  cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';
+}
+addEventListener('resize',resize); resize();
+
+// ── hover (mouse) + tap (touch): mostra il nome dell'animale ───────
+cv.addEventListener('mousemove',e=>{
+  const r=cv.getBoundingClientRect();
+  hoverBeing=beingAt((e.clientX-r.left)*DPR,(e.clientY-r.top)*DPR);
+  hoverClearT=0;
+});
+cv.addEventListener('mouseleave',()=>{ hoverBeing=null; });
+cv.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse') return; // il mouse usa hover
+  const r=cv.getBoundingClientRect();
+  const hit=beingAt((e.clientX-r.left)*DPR,(e.clientY-r.top)*DPR);
+  if(hit){ hoverBeing=hit; hoverClearT=performance.now()+2000; } // nome per 2s
+});
+
+let day=0.8;
+const beings=[];
+let hoverBeing=null, hoverClearT=0;
+// hit-test: trova l'animale sotto il punto (coord canvas già in DPR)
+function beingAt(px,py){
+  for(let i=beings.length-1;i>=0;i--){ const b=beings[i];
+    const r=b.size*DPR*1.4;
+    if((px-b.x)**2+(py-b.y)**2 < r*r) return b; }
+  return null;
+}
+
+function addBeing(id){
+  const s=BYID[id]; if(!s) return;
+  beings.push({...s, x:Math.random()*W, y:H*0.2+Math.random()*H*0.55,
+    vx:(Math.random()-0.5), vy:(Math.random()-0.5), phase:Math.random()*6.28,
+    nextSound:performance.now()+Math.random()*3000, sleep:0, hopT:Math.random(), face:Math.random()<0.5?1:-1});
+  if(AC) chirp(s.sound,0.6);
+}
+
+// ── AUDIO ──────────────────────────────────────────────────────────
+let AC,master,ambGain,ambLP,ambSrc,ambLFO;
+function initAudio(){
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain(); master.gain.value=0.9; master.connect(AC.destination);
+  buildAmbient();
+}
+function buildAmbient(){
+  const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.5;
+  ambSrc=AC.createBufferSource(); ambSrc.buffer=buf; ambSrc.loop=true;
+  ambLP=AC.createBiquadFilter(); ambLP.type='lowpass'; ambLP.frequency.value=520; ambLP.Q.value=0.7;
+  ambGain=AC.createGain(); ambGain.gain.value=0.12;
+  ambLFO=AC.createOscillator(); ambLFO.frequency.value=0.06;
+  const lg=AC.createGain(); lg.gain.value=180; ambLFO.connect(lg); lg.connect(ambLP.frequency);
+  ambSrc.connect(ambLP); ambLP.connect(ambGain); ambGain.connect(master);
+  ambSrc.start(); ambLFO.start();
+  applyEnvAudio();
+}
+function applyEnvAudio(){
+  if(!ambLP) return;
+  const a=ENVS[curEnv].amb; ambLP.frequency.value=a.cut; ambGain.gain.value=a.g;
+}
+function chirp(sound,vol=1){
+  if(!AC) return;
+  const t=AC.currentTime, o=AC.createOscillator(); o.type=sound.type;
+  o.frequency.value=sound.base*(0.9+Math.random()*0.2); o.detune.value=(Math.random()*2-1)*40;
+  const g=AC.createGain();
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.16*vol,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0008,t+0.35);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+0.4);
+}
+
+// ── MOVIMENTO ──────────────────────────────────────────────────────
+function stepBeing(b,dt){
+  const awake=1-b.sleep;
+  if(b.sleep>0.98) return;
+  const sp=b.speed*awake*DPR; b.phase+=0.02;
+  switch(b.motion){
+    case 'float': b.vx+=Math.cos(b.phase)*0.02; b.vy+=Math.sin(b.phase*0.7)*0.02; break;
+    case 'dart':  if(Math.random()<0.02){const a=Math.random()*6.28;b.vx=Math.cos(a)*2.2;b.vy=Math.sin(a)*2.2;} break;
+    case 'hop':   b.hopT+=dt*0.05*awake; if(b.hopT>1){b.hopT=0;const a=Math.random()*6.28;b.vx=Math.cos(a)*1.8;b.vy=Math.sin(a)*1.8;} b.vx*=0.94;b.vy*=0.94; break;
+    case 'crawl': b.vx+=(Math.random()-0.5)*0.05; b.vy+=(Math.random()-0.5)*0.03; b.vx*=0.9;b.vy*=0.9; break;
+    default:      b.vx+=(Math.random()-0.5)*0.15; b.vy+=(Math.random()-0.5)*0.15;
+  }
+  const mag=Math.hypot(b.vx,b.vy)||1, max=1.4;
+  if(mag>max){b.vx=b.vx/mag*max;b.vy=b.vy/mag*max;}
+  if(Math.abs(b.vx)>0.05) b.face=b.vx>0?1:-1;
+  b.x+=b.vx*sp; b.y+=b.vy*sp;
+  const m=30*DPR;
+  if(b.x<m){b.x=m;b.vx=Math.abs(b.vx);} if(b.x>W-m){b.x=W-m;b.vx=-Math.abs(b.vx);}
+  if(b.y<H*0.14){b.y=H*0.14;b.vy=Math.abs(b.vy);} if(b.y>H-m-70){b.y=H-m-70;b.vy=-Math.abs(b.vy);}
+  const now=performance.now();
+  if(now>b.nextSound){
+    if(awake>0.25 && Math.random()<b.sound.rate*0.5) chirp(b.sound,awake);
+    b.nextSound=now+700+Math.random()*2600/(awake+0.1);
+  }
+}
+
+// ── SILHOUETTE per specie (stile geometrico) ───────────────────────
+// disegna centrato in (0,0), scala sz, guardando a destra (face gestito fuori)
+function drawCreature(c, sz){
+  const col=c.colors, sleeping=c.sleep>0.6;
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  const body=col[0], acc=col[1]||col[0], ex=col[2]||acc;
+  const S=c.species;
+  // corpo base
+  function ell(x,y,rx,ry,fill){ ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fillStyle=fill; ctx.fill(); }
+  function tri(x1,y1,x2,y2,x3,y3,fill){ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); }
+  const s=sz;
+  if(S==='cat'){
+    ell(0,0,s*0.9,s*0.75,body);
+    tri(-s*0.6,-s*0.55,-s*0.3,-s*1.15,-s*0.05,-s*0.5,body); // orecchio L
+    tri( s*0.6,-s*0.55, s*0.3,-s*1.15, s*0.05,-s*0.5,body); // orecchio R
+    ctx.strokeStyle=acc; ctx.lineWidth=s*0.14; ctx.beginPath(); ctx.moveTo(s*0.8,s*0.2); ctx.quadraticCurveTo(s*1.5,-s*0.1,s*1.3,-s*0.8); ctx.stroke(); // coda
+  } else if(S==='dog'){
+    ell(0,0,s*0.95,s*0.72,body);
+    ell(-s*0.7,-s*0.2,s*0.28,s*0.5,acc); ell(s*0.7,-s*0.2,s*0.28,s*0.5,acc); // orecchie flosce
+    ctx.strokeStyle=acc; ctx.lineWidth=s*0.14; ctx.beginPath(); ctx.moveTo(s*0.85,0); ctx.quadraticCurveTo(s*1.4,-s*0.3,s*1.2,-s*0.7); ctx.stroke();
+  } else if(S==='wolf'){
+    ell(0,0,s*0.9,s*0.68,body);
+    tri(-s*0.55,-s*0.5,-s*0.35,-s*1.2,-s*0.1,-s*0.45,acc);
+    tri( s*0.55,-s*0.5, s*0.35,-s*1.2, s*0.1,-s*0.45,acc);
+    tri(s*0.8,s*0.1,s*1.5,-s*0.2,s*1.3,-s*0.9,body); // coda folta
+  } else if(S==='horse'){
+    ell(0,s*0.1,s*1.1,s*0.6,body);
+    ell(s*0.9,-s*0.6,s*0.5,s*0.45,body); // testa
+    tri(-s*1.0,-s*0.5,-s*0.6,-s*0.5,-s*0.8,s*0.1,acc); // criniera
+    ctx.strokeStyle=col[2]||acc; ctx.lineWidth=s*0.16; ctx.beginPath(); ctx.moveTo(-s*1.0,0); ctx.quadraticCurveTo(-s*1.5,s*0.4,-s*1.3,s*0.9); ctx.stroke();
+  } else if(S==='gorilla'){
+    ell(0,0,s*1.0,s*0.95,body);
+    ell(-s*0.85,-s*0.5,s*0.3,s*0.35,body); ell(s*0.85,-s*0.5,s*0.3,s*0.35,body);
+    ell(0,s*0.15,s*0.55,s*0.5,acc); // pancia
+  } else if(S==='hedgehog'){
+    ell(0,s*0.1,s*0.95,s*0.7,acc); // faccia chiara
+    for(let i=-3;i<=3;i++) tri(i*s*0.28,-s*0.3, i*s*0.28-s*0.12,-s*1.15, i*s*0.28+s*0.12,-s*0.3, body); // aculei
+    ell(s*0.7,s*0.2,s*0.35,s*0.3,acc);
+  } else if(S==='squirrel'){
+    ell(0,s*0.1,s*0.7,s*0.72,body);
+    ctx.beginPath(); ctx.moveTo(-s*0.5,s*0.3); ctx.quadraticCurveTo(-s*1.6,-s*0.2,-s*0.9,-s*1.2); ctx.quadraticCurveTo(-s*0.3,-s*0.6,-s*0.5,s*0.3); ctx.fillStyle=acc; ctx.fill(); // coda grande
+    tri(-s*0.3,-s*0.55,-s*0.15,-s*1.0,0,-s*0.5,body);
+  } else if(S==='croc'){
+    ell(0,0,s*1.2,s*0.5,body);
+    ell(s*1.1,s*0.05,s*0.7,s*0.28,body); // muso lungo
+    for(let i=0;i<5;i++) tri(-s*0.8+i*s*0.45,-s*0.45,-s*0.65+i*s*0.45,-s*0.85,-s*0.5+i*s*0.45,-s*0.45,acc); // dorso
+  } else if(S==='caterpillar'){
+    for(let i=0;i<5;i++){ ell((i-2)*s*0.55,Math.sin(i*0.9+ (performance.now()/300))*s*0.12, s*0.42,s*0.42, col[i%col.length]); }
+  } else if(S==='monkey'){
+    ell(0,0,s*0.8,s*0.75,body);
+    ell(-s*0.75,-s*0.1,s*0.28,s*0.32,body); ell(s*0.75,-s*0.1,s*0.28,s*0.32,body); // orecchie tonde
+    ell(0,s*0.15,s*0.5,s*0.45,acc);
+    ctx.strokeStyle=body; ctx.lineWidth=s*0.13; ctx.beginPath(); ctx.moveTo(-s*0.7,s*0.3); ctx.quadraticCurveTo(-s*1.5,s*0.2,-s*1.2,-s*0.5); ctx.stroke();
+  } else if(S==='owl'){
+    ell(0,0,s*0.85,s*0.95,body);
+    ell(-s*0.38,-s*0.3,s*0.32,s*0.32,'#20303a'); ell(s*0.38,-s*0.3,s*0.32,s*0.32,'#20303a'); // occhioni scuri
+    if(!sleeping){ ell(-s*0.38,-s*0.3,s*0.15,s*0.15,acc); ell(s*0.38,-s*0.3,s*0.15,s*0.15,acc); }
+    tri(-s*0.7,-s*0.7,-s*0.35,-s*1.1,-s*0.15,-s*0.6,body);
+    tri( s*0.7,-s*0.7, s*0.35,-s*1.1, s*0.15,-s*0.6,body);
+  } else if(S==='bear'){
+    ell(0,0,s*0.95,s*0.9,body);
+    ell(-s*0.7,-s*0.6,s*0.3,s*0.3,body); ell(s*0.7,-s*0.6,s*0.3,s*0.3,body);
+    ell(0,s*0.2,s*0.45,s*0.4,acc);
+  } else if(S==='cow'){
+    ell(0,0,s*1.0,s*0.75,body);
+    ell(-s*0.7,-s*0.55,s*0.22,s*0.28,acc); ell(s*0.7,-s*0.55,s*0.22,s*0.28,acc); // orecchie
+    tri(-s*0.5,-s*0.7,-s*0.35,-s*1.05,-s*0.2,-s*0.7,'#e8e0d0'); // cornino
+    tri( s*0.5,-s*0.7, s*0.35,-s*1.05, s*0.2,-s*0.7,'#e8e0d0');
+    ell(0,s*0.35,s*0.4,s*0.3,acc);
+  } else {
+    ell(0,0,s*0.9,s*0.7,body);
+  }
+  // occhi (tranne gufo che li ha già) — chiusi se dorme
+  if(S!=='owl' && S!=='caterpillar'){
+    if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08);
+      ctx.beginPath(); ctx.moveTo(s*0.1,-s*0.1); ctx.lineTo(s*0.35,-s*0.1); ctx.stroke(); }
+    else { ell(s*0.28,-s*0.12,s*0.1,s*0.12,'#182530'); }
+  }
+}
+
+// ── RENDER scena ───────────────────────────────────────────────────
+let ripples=[]; for(let i=0;i<7;i++) ripples.push({x:Math.random(),y:Math.random()*0.4+0.55,sp:0.1+Math.random()*0.2});
+function draw(){
+  const E=ENVS[curEnv], dn=1-day;   // dn = quanto è notte (0=giorno pieno, 1=notte fonda)
+  const top=mix(E.sky[0],E.night[0],dn), bot=mix(E.sky[1],E.night[1],dn);
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot));
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const t=performance.now()/1000;
+  // astro: sole di giorno, luna di notte
+  const ax=W*0.82, ay=H*0.15, ar=26*DPR;
+  // "ora" percepita per colorare l'astro: reale se auto, stimata dallo slider se manuale
+  const hr = autoClock ? curHour : (day>=0.5 ? 6+(1-day)*12 : 18+(0.5-day)*12); // mattino se sale, sera se scende
+  if(dn>0.5){
+    // LUNA: gialla la sera (18-22) e verso l'alba (4-6), bianca a notte fonda
+    let moon;
+    if(hr>=18&&hr<23) moon=[255,236,170];        // sera: gialla
+    else if(hr>=4&&hr<7) moon=[255,240,190];       // pre-alba: gialla tenue
+    else moon=[236,240,255];                        // notte fonda: bianca
+    ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.fillStyle=`rgba(${moon[0]},${moon[1]},${moon[2]},${0.6+dn*0.4})`; ctx.fill();
+    // mezzaluna: cerchio del colore del cielo che "morde" la luna
+    ctx.beginPath(); ctx.arc(ax+ar*0.5,ay-ar*0.25,ar*0.92,0,6.29); ctx.fillStyle=rgb(top); ctx.fill();
+  } else {
+    // SOLE: alba giallo chiaro → mezzogiorno giallo pieno → tramonto rosso
+    let sun;
+    if(hr<11)      sun=[255,238,170];   // mattino/alba: giallo chiaro
+    else if(hr<15) sun=[255,216,70];    // mezzogiorno: giallo pieno
+    else           sun=[255,120,60];    // pomeriggio/tramonto: rosso-arancio
+    // alone caldo
+    const glow=ctx.createRadialGradient(ax,ay,ar*0.6,ax,ay,ar*2.2);
+    glow.addColorStop(0,`rgba(${sun[0]},${sun[1]},${sun[2]},.5)`); glow.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(ax,ay,ar*2.2,0,6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(ax,ay,ar,0,6.29); ctx.fillStyle=`rgb(${sun[0]},${sun[1]},${sun[2]})`; ctx.fill();
+  }
+  // acqua
+  if(E.water){
+    ctx.strokeStyle=`rgba(255,255,255,${0.05+0.05*dn})`; ctx.lineWidth=1*DPR;
+    for(const rp of ripples){ const yy=H*rp.y+Math.sin(t*rp.sp*6+rp.x*9)*4*DPR;
+      ctx.beginPath(); for(let x=0;x<=W;x+=16*DPR){ const y=yy+Math.sin(x/W*8+t*rp.sp*4+rp.x*10)*3*DPR; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
+  }
+  // alberi (silhouette semplice sul fondo)
+  if(E.trees){
+    ctx.fillStyle=`rgba(0,0,0,${0.18+0.25*dn})`;
+    for(let i=0;i<6;i++){ const x=(i+0.5)/6*W, hh=H*(0.16+((i*7)%5)/20);
+      ctx.beginPath(); ctx.moveTo(x,H); ctx.lineTo(x-hh*0.5,H-hh*0.5); ctx.lineTo(x-hh*0.2,H-hh*0.5);
+      ctx.lineTo(x-hh*0.6,H-hh); ctx.lineTo(x,H-hh*1.3); ctx.lineTo(x+hh*0.6,H-hh);
+      ctx.lineTo(x+hh*0.2,H-hh*0.5); ctx.lineTo(x+hh*0.5,H-hh*0.5); ctx.closePath(); ctx.fill(); }
+  }
+  // personaggi
+  for(const b of beings){
+    ctx.save(); ctx.translate(b.x,b.y);
+    const bob=b.motion==='hop'?Math.sin(b.hopT*Math.PI)*b.size*0.5*DPR*(1-b.sleep):0;
+    ctx.translate(0,-bob);
+    const sz=b.size*DPR*(1-b.sleep*0.15);
+    // alone
+    ctx.beginPath(); ctx.arc(0,0,sz*1.7,0,6.29); ctx.fillStyle=hexA(b.colors[0],0.10*(1-b.sleep)); ctx.fill();
+    ctx.scale(b.face,1);
+    ctx.globalAlpha=0.6+0.4*(1-b.sleep);
+    drawCreature(b,sz);
+    ctx.globalAlpha=1;
+    ctx.restore();
+    // Z se dorme
+    if(b.sleep>0.7){ ctx.fillStyle=`rgba(220,235,255,${(b.sleep-0.7)*2})`; ctx.font=`${b.size*0.8*DPR}px serif`;
+      ctx.fillText('z', b.x+b.size*DPR, b.y-b.size*1.4*DPR); }
+  }
+  // etichetta nome su hover (mouse) o tap (touch)
+  if(hoverBeing && beings.includes(hoverBeing)){
+    const b=hoverBeing, s=b.size*DPR;
+    ctx.font=`700 ${Math.round(13*DPR)}px system-ui,sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.lineWidth=Math.max(2,3*DPR); ctx.strokeStyle='rgba(0,0,0,.72)'; ctx.lineJoin='round';
+    ctx.strokeText(b.name, b.x, b.y - s*1.9);
+    ctx.fillStyle='#fff'; ctx.fillText(b.name, b.x, b.y - s*1.9);
+  }
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────
+function mix(a,b,t){ return a.map((v,i)=>Math.round(v*(1-t)+b[i]*t)); }
+function rgb(a){ return `rgb(${a[0]},${a[1]},${a[2]})`; }
+function hexA(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+
+// ── LOOP ───────────────────────────────────────────────────────────
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(50,now-last); last=now;
+  if(hoverClearT && now>hoverClearT){ hoverBeing=null; hoverClearT=0; } // scade il tap-label
+  const wantSleep=day<0.35?1:(day<0.5?(0.5-day)/0.15:0);
+  for(const b of beings){ b.sleep+=(wantSleep-b.sleep)*0.02; stepBeing(b,dt); }
+  if(ambGain){ const base=ENVS[curEnv].amb.g; ambGain.gain.value=base+(1-day)*0.04; }
+  draw(); requestAnimationFrame(loop);
+}
+
+// ── UI: palette + ambienti ─────────────────────────────────────────
+function buildPalette(){
+  const pal=document.getElementById('palette');
+  CAST.forEach(c=>{
+    const btn=document.createElement('button'); btn.className='chip'; btn.title=c.name;
+    const mini=document.createElement('canvas'); mini.width=mini.height=76;
+    drawMini(mini.getContext('2d'),c);
+    const lbl=document.createElement('span'); lbl.textContent=c.name;
+    btn.appendChild(mini); btn.appendChild(lbl);
+    btn.addEventListener('click',()=>addBeing(c.id));
+    pal.appendChild(btn);
+  });
+}
+// disegna la mini-anteprima della creatura per le chip
+function drawMini(g,c){
+  drawCreatureOn(g,c,22,38,44);
+}
+// versione parametrica (silhouette minimale su contesto g, per le chip)
+function drawCreatureOn(g,c,sz,cx,cy){
+  g.save(); g.translate(cx,cy);
+  // riusa la logica: copio chiamando drawCreature ma serve ctx globale → semplifico: ridisegno alone+forma basilare
+  g.beginPath(); g.arc(0,0,sz*1.4,0,6.29); g.fillStyle=hexA(c.colors[0],0.15); g.fill();
+  // corpo
+  g.beginPath(); g.ellipse(0,0,sz*0.9,sz*0.72,0,0,6.29); g.fillStyle=c.colors[0]; g.fill();
+  // marchio specie minimale
+  const acc=c.colors[1]||c.colors[0];
+  if(c.species==='cat'||c.species==='wolf'){ tr(g,-sz*0.5,-sz*0.5,-sz*0.3,-sz*1.05,-sz*0.05,-sz*0.45,c.colors[0]); tr(g,sz*0.5,-sz*0.5,sz*0.3,-sz*1.05,sz*0.05,-sz*0.45,c.colors[0]); }
+  if(c.species==='dog'||c.species==='cow'||c.species==='monkey'){ g.beginPath(); g.ellipse(-sz*0.7,-sz*0.2,sz*0.25,sz*0.4,0,0,6.29); g.fillStyle=acc; g.fill(); g.beginPath(); g.ellipse(sz*0.7,-sz*0.2,sz*0.25,sz*0.4,0,0,6.29); g.fill(); }
+  if(c.species==='owl'){ g.fillStyle='#20303a'; g.beginPath(); g.arc(-sz*0.35,-sz*0.2,sz*0.28,0,6.29); g.fill(); g.beginPath(); g.arc(sz*0.35,-sz*0.2,sz*0.28,0,6.29); g.fill(); g.fillStyle=acc; g.beginPath(); g.arc(-sz*0.35,-sz*0.2,sz*0.12,0,6.29); g.fill(); g.beginPath(); g.arc(sz*0.35,-sz*0.2,sz*0.12,0,6.29); g.fill(); }
+  if(c.species==='caterpillar'){ for(let i=0;i<4;i++){ g.beginPath(); g.arc((i-1.5)*sz*0.5,0,sz*0.4,0,6.29); g.fillStyle=c.colors[i%c.colors.length]; g.fill(); } }
+  if(c.species==='hedgehog'){ for(let i=-2;i<=2;i++) tr(g,i*sz*0.3,-sz*0.3,i*sz*0.3-sz*0.1,-sz*1.0,i*sz*0.3+sz*0.1,-sz*0.3,acc); }
+  g.restore();
+}
+function tr(g,x1,y1,x2,y2,x3,y3,f){ g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.lineTo(x3,y3); g.closePath(); g.fillStyle=f; g.fill(); }
+
+function buildEnvButtons(){
+  const box=document.getElementById('env');
+  Object.entries(ENVS).forEach(([k,e])=>{
+    const b=document.createElement('button'); b.className='envbtn'+(k===curEnv?' active':''); b.textContent=e.name;
+    b.addEventListener('click',()=>{ curEnv=k; applyEnvAudio();
+      document.querySelectorAll('.envbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+    box.appendChild(b);
+  });
+}
+
+const dayEl=document.getElementById('day'), labEl=document.getElementById('label');
+const clockBtn=document.getElementById('clockBtn'), clockTime=document.getElementById('clockTime');
+let autoClock=true;   // di default il mondo segue l'ora reale
+let curHour=12;       // ora corrente (per colorare sole/luna)
+// ora reale (0..1) → day (1=giorno pieno, 0=notte). Curva alba/tramonto morbida.
+function dayFromClock(){
+  const now=new Date();
+  const h=now.getHours()+now.getMinutes()/60;
+  // notte<6, alba 6-8, giorno 8-18, tramonto 18-21, notte>21
+  let d;
+  if(h<5||h>=22) d=0;
+  else if(h<8)  d=(h-5)/3;        // alba 5→8
+  else if(h<18) d=1;              // pieno giorno
+  else if(h<22) d=1-(h-18)/4;    // tramonto 18→22
+  else d=0;
+  return Math.max(0,Math.min(1,d));
+}
+function setLabel(){ labEl.textContent=day>0.6?'🌞 Giorno':day>0.35?'🌇 Sera':'🌙 Notte'; }
+function syncSliderFromDay(){ dayEl.value=Math.round((1-day)*100); }
+function tickClock(){
+  const now=new Date();
+  curHour=now.getHours()+now.getMinutes()/60;
+  clockTime.textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  if(autoClock){ day=dayFromClock(); setLabel(); syncSliderFromDay(); }
+}
+
+// ── OROLOGIO ANALOGICO (impara a leggere le ore) ──────────────
+const clockModal=document.getElementById('clockModal');
+const clockCanvas=document.getElementById('clockCanvas');
+const clockDigital=document.getElementById('clockDigital');
+let clockAnim=0;
+function drawAnalogClock(){
+  const cvx=clockCanvas, gx=cvx.getContext('2d');
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const S=320; if(cvx.width!==S*dpr){ cvx.width=cvx.height=S*dpr; }
+  const R=S*dpr/2, cx=R, cy=R, rad=R*0.9;
+  gx.clearRect(0,0,cvx.width,cvx.height);
+  // quadrante
+  gx.beginPath(); gx.arc(cx,cy,rad,0,6.2832); gx.fillStyle='#fbf6ea'; gx.fill();
+  gx.lineWidth=R*0.045; gx.strokeStyle='#e8443a'; gx.stroke();
+  // tacche + numeri
+  for(let i=1;i<=12;i++){
+    const a=i/12*6.2832 - Math.PI/2;
+    // tacca ore
+    const x1=cx+Math.cos(a)*rad*0.86, y1=cy+Math.sin(a)*rad*0.86;
+    const x2=cx+Math.cos(a)*rad*0.94, y2=cy+Math.sin(a)*rad*0.94;
+    gx.beginPath(); gx.moveTo(x1,y1); gx.lineTo(x2,y2); gx.lineWidth=R*0.03; gx.strokeStyle='#33475a'; gx.stroke();
+    // numero
+    const nx=cx+Math.cos(a)*rad*0.72, ny=cy+Math.sin(a)*rad*0.72;
+    gx.fillStyle='#22323f'; gx.font=`700 ${Math.round(R*0.18)}px system-ui,sans-serif`;
+    gx.textAlign='center'; gx.textBaseline='middle'; gx.fillText(i,nx,ny);
+  }
+  // tacche minuti
+  for(let i=0;i<60;i++){ if(i%5===0) continue; const a=i/60*6.2832-Math.PI/2;
+    const x1=cx+Math.cos(a)*rad*0.9, y1=cy+Math.sin(a)*rad*0.9;
+    const x2=cx+Math.cos(a)*rad*0.94, y2=cy+Math.sin(a)*rad*0.94;
+    gx.beginPath(); gx.moveTo(x1,y1); gx.lineTo(x2,y2); gx.lineWidth=R*0.008; gx.strokeStyle='#8aa'; gx.stroke(); }
+  const now=new Date();
+  const s=now.getSeconds()+now.getMilliseconds()/1000;
+  const m=now.getMinutes()+s/60;
+  const h=(now.getHours()%12)+m/60;
+  function hand(angle,len,w,color,round=true){
+    const a=angle-Math.PI/2;
+    gx.beginPath(); gx.moveTo(cx,cy);
+    gx.lineTo(cx+Math.cos(a)*len, cy+Math.sin(a)*len);
+    gx.lineWidth=w; gx.strokeStyle=color; gx.lineCap=round?'round':'butt'; gx.stroke();
+  }
+  hand(h/12*6.2832, rad*0.5, R*0.055, '#22323f');   // ore
+  hand(m/60*6.2832, rad*0.75, R*0.038, '#33475a');  // minuti
+  hand(s/60*6.2832, rad*0.82, R*0.016, '#e8443a');  // secondi
+  gx.beginPath(); gx.arc(cx,cy,R*0.045,0,6.2832); gx.fillStyle='#e8443a'; gx.fill();
+  clockDigital.textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+function clockLoop(){ if(clockModal.hidden) return; drawAnalogClock(); clockAnim=requestAnimationFrame(clockLoop); }
+clockBtn.addEventListener('click',()=>{ clockModal.hidden=false; clockLoop(); });
+document.getElementById('clockClose').addEventListener('click',()=>{ clockModal.hidden=true; });
+clockModal.addEventListener('click',e=>{ if(e.target===clockModal) clockModal.hidden=true; });
+
+dayEl.addEventListener('input',()=>{ autoClock=false;   // trascinando → manuale
+  day=1-dayEl.value/100; setLabel(); });
+tickClock(); setInterval(tickClock,20000);   // aggiorna ogni 20s
+// ── POSTER intro: tutti gli animali nel paesaggio (riusa drawCreature) ──
+function drawPoster(){
+  const pc=document.getElementById('poster'); if(!pc) return;
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const w=pc.width=innerWidth*dpr, h=pc.height=innerHeight*dpr;
+  pc.style.width=innerWidth+'px'; pc.style.height=innerHeight+'px';
+  const g=pc.getContext('2d');
+  // sfondo: cielo → prato/acqua
+  const sky=g.createLinearGradient(0,0,0,h);
+  sky.addColorStop(0,'#5aa9ff'); sky.addColorStop(0.55,'#8fd0e8'); sky.addColorStop(0.56,'#7fc47a'); sky.addColorStop(1,'#4f9e6a');
+  g.fillStyle=sky; g.fillRect(0,0,w,h);
+  // sole
+  g.beginPath(); g.arc(w*0.82,h*0.16,34*dpr,0,6.29); g.fillStyle='rgba(255,235,160,.9)'; g.fill();
+  // laghetto
+  g.beginPath(); g.ellipse(w*0.5,h*0.72,w*0.42,h*0.16,0,0,6.29); g.fillStyle='#5aa9ff'; g.fill();
+  g.beginPath(); g.ellipse(w*0.5,h*0.72,w*0.42,h*0.16,0,0,6.29); g.strokeStyle='rgba(255,255,255,.25)'; g.lineWidth=2*dpr; g.stroke();
+  // qualche albero silhouette
+  g.fillStyle='rgba(30,90,60,.55)';
+  for(let i=0;i<5;i++){ const x=(0.08+i*0.21)*w, base=h*0.58, hh=h*0.12;
+    g.beginPath(); g.moveTo(x,base); g.lineTo(x-hh*0.55,base-hh*0.5); g.lineTo(x-hh*0.2,base-hh*0.5);
+    g.lineTo(x-hh*0.6,base-hh); g.lineTo(x,base-hh*1.35); g.lineTo(x+hh*0.6,base-hh);
+    g.lineTo(x+hh*0.2,base-hh*0.5); g.lineTo(x+hh*0.55,base-hh*0.5); g.closePath(); g.fill(); }
+  // un OVALE solo, largo, attorno al titolo centrale (riusa drawCreature via swap ctx)
+  const prevCtx=ctx, prevDPR=DPR; ctx=g; DPR=dpr;
+  const ccx=w*0.5, ccy=h*0.48;
+  const n=CAST.length;
+  const rx=w*0.40, ry=h*0.33;
+  const sz=Math.min(w,h)*0.04;
+  // distribuzione per LUNGHEZZA D'ARCO uguale (non ad angolo): evita l'affollamento ai lati dell'ovale
+  const SAMP=1440, cum=[0];
+  let px=Math.cos(-Math.PI/2)*rx, py=Math.sin(-Math.PI/2)*ry;
+  for(let k=1;k<=SAMP;k++){ const a=-Math.PI/2 + k/SAMP*6.2832;
+    const x=Math.cos(a)*rx, y=Math.sin(a)*ry;
+    cum.push(cum[k-1]+Math.hypot(x-px,y-py)); px=x; py=y; }
+  const total=cum[SAMP];
+  function angleAtArc(s){ // trova l'angolo alla frazione d'arco s
+    let lo=0,hi=SAMP; while(lo<hi){ const mid=(lo+hi)>>1; if(cum[mid]<s) lo=mid+1; else hi=mid; }
+    return -Math.PI/2 + lo/SAMP*6.2832;
+  }
+  CAST.forEach((c,i)=>{
+    const a=angleAtArc(i/n*total);
+    const cx=ccx+Math.cos(a)*rx, cy=ccy+Math.sin(a)*ry;
+    g.save(); g.translate(cx,cy);
+    g.beginPath(); g.arc(0,0,sz*1.55,0,6.29); g.fillStyle=hexA(c.colors[0],0.12); g.fill();
+    const face=(i%2)?-1:1; g.save(); g.scale(face,1); drawCreature({...c,sleep:0}, sz); g.restore();
+    // nome sotto, contorno scuro
+    g.font=`700 ${Math.round(sz*0.72)}px system-ui,sans-serif`;
+    g.textAlign='center'; g.textBaseline='top';
+    g.lineWidth=Math.max(2,sz*0.16); g.strokeStyle='rgba(0,0,0,.72)'; g.lineJoin='round';
+    g.strokeText(c.name, 0, sz*1.5); g.fillStyle='#fff'; g.fillText(c.name, 0, sz*1.5);
+    g.restore();
+  });
+  ctx=prevCtx; DPR=prevDPR;
+}
+
+document.getElementById('clear').addEventListener('click',()=>{ beings.length=0; });
+
+// ── INFO modal: tabella amici (immagine via drawCreature + nome/tipo/descrizione) ──
+function buildInfoTable(){
+  document.getElementById('infoVer').textContent=APP_VERSION;
+  const tb=document.querySelector('#infoTable tbody'); if(tb.childElementCount) return; // una volta sola
+  const prevCtx=ctx, prevDPR=DPR;
+  CAST.forEach(c=>{
+    const tr=document.createElement('tr');
+    const tdP=document.createElement('td'); tdP.className='pic';
+    const mc=document.createElement('canvas'); const d=Math.min(2,window.devicePixelRatio||1);
+    mc.width=44*d; mc.height=44*d; mc.style.width='44px'; mc.style.height='44px';
+    const mg=mc.getContext('2d'); ctx=mg; DPR=d;
+    mg.save(); mg.translate(22*d,26*d);
+    mg.beginPath(); mg.arc(0,0,17*d,0,6.29); mg.fillStyle=hexA(c.colors[0],0.14); mg.fill();
+    drawCreature({...c,sleep:0}, 13*d);
+    mg.restore();
+    tdP.appendChild(mc);
+    const tdI=document.createElement('td');
+    const info=INFO[c.id]||['',''];
+    tdI.innerHTML=`<div class="nm">${c.name}</div><div class="tp">${info[0]}</div><div class="ds">${info[1]}</div>`;
+    tr.appendChild(tdP); tr.appendChild(tdI); tb.appendChild(tr);
+  });
+  ctx=prevCtx; DPR=prevDPR;
+}
+const infoModal=document.getElementById('infoModal');
+document.getElementById('infoBtn').addEventListener('click',()=>{ buildInfoTable(); infoModal.hidden=false; });
+document.getElementById('infoClose').addEventListener('click',()=>{ infoModal.hidden=true; });
+infoModal.addEventListener('click',e=>{ if(e.target===infoModal) infoModal.hidden=true; });
+
+document.getElementById('start').addEventListener('click',()=>{
+  const st=document.getElementById('start');
+  document.getElementById('top').hidden=false;
+  document.getElementById('palette').hidden=false;
+  buildPalette(); buildEnvButtons(); initAudio();
+  // mondo iniziale: qualche personaggio dell'ambiente acqua
+  ['gallo','tutti','catto'].forEach(addBeing);
+  requestAnimationFrame(loop);
+  // zoom-in "entro nel mondo", poi rimuovo l'overlay a fine transizione
+  requestAnimationFrame(()=>st.classList.add('zoom'));
+  st.addEventListener('transitionend', e=>{ if(e.propertyName==='opacity') st.remove(); }, {once:true});
+  setTimeout(()=>st.remove(), 1200); // fallback se transitionend non scatta
+});
+
+// disegna il poster all'avvio (e lo ridisegna se ruoti/ridimensioni prima di entrare)
+drawPoster();
+addEventListener('resize',()=>{ if(document.getElementById('poster')) drawPoster(); });
+</script>
+</body>
+</html>
