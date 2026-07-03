@@ -210,7 +210,7 @@ function beingAt(px,py){
 
 function addBeing(id){
   const s=BYID[id]; if(!s) return;
-  beings.push({...s, x:Math.random()*W, y:H*0.2+Math.random()*H*0.55,
+  beings.push({...s, x:Math.random()*W, y:H*(BASE.horizon+0.05)+Math.random()*H*0.28,
     vx:(Math.random()-0.5), vy:(Math.random()-0.5), phase:Math.random()*6.28,
     nextSound:performance.now()+Math.random()*3000, sleep:0, hopT:Math.random(), face:Math.random()<0.5?1:-1});
   if(AC) chirp(s.sound,0.6);
@@ -272,7 +272,8 @@ function stepBeing(b,dt){
   b.x+=b.vx*sp; b.y+=b.vy*sp;
   const m=30*DPR;
   if(b.x<m){b.x=m;b.vx=Math.abs(b.vx);} if(b.x>W-m){b.x=W-m;b.vx=-Math.abs(b.vx);}
-  if(b.y<H*0.14){b.y=H*0.14;b.vy=Math.abs(b.vy);} if(b.y>H-m-70){b.y=H-m-70;b.vy=-Math.abs(b.vy);}
+  const yTop=H*(BASE.horizon+0.02);   // animali sul PRATO, sotto l'orizzonte (niente più creature volanti)
+  if(b.y<yTop){b.y=yTop;b.vy=Math.abs(b.vy);} if(b.y>H-m-70){b.y=H-m-70;b.vy=-Math.abs(b.vy);}
   const now=performance.now();
   if(now>b.nextSound){
     if(awake>0.25 && Math.random()<b.sound.rate*0.5){ chirp(b.sound,awake); b.glowT=now; } // bagliore quando "parla"
