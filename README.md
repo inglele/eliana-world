@@ -37,17 +37,31 @@ Deliberately minimal ([ponytail](https://github.com/DietrichGebert/ponytail) sty
 
 ## Project structure (modular, editable)
 
-The content lives in plain `.js` files anyone can edit — no build step:
+Content lives in plain `.js` files anyone can edit — no build step. Folders:
 
-| File | What it holds | Edit it to… |
-|---|---|---|
-| `characters.js` | the 21 friends (name, type, colours, movement, sound, description) | **add / change an animal** |
-| `environments.js` | the scenes (pond / forest / beach / park / home: sky + ambient) | **add / change a scene** |
-| `creatures.js` | the body shapes per species (`drawCreature`) | **add a new body type** |
-| `languages.js` + `locales/<code>.js` | language engine + strings, one file per language | **translate / add a language** |
-| `index.html` | the engine (audio, movement, clock, render loop) | rarely |
+```
+index.html          entry point
+config.js           ← personalize here (child's name, location)
+content/            the editable data (make it yours)
+  characters.js       the animal friends
+  environments.js     the scenes
+  creatures.js        the body shapes per species
+locales/            translations (one file per language)
+  it-IT.js  en-US.js
+lib/                the engine (rarely touched)
+  languages.js  sun.js  version.js
+deploy.sh  README.md  CHANGELOG.md  LICENSE
+```
 
-**Add a friend** → copy a line in `characters.js`, change the fields. If its `species` already exists (cat, dog, owl…), that's it. Only touch `creatures.js` if you want a brand-new body shape.
+| Edit… | to… |
+|---|---|
+| `config.js` | set the child's name + (optional) location |
+| `content/characters.js` | **add / change an animal** |
+| `content/environments.js` | **add / change a scene** |
+| `content/creatures.js` | **add a new body shape** (species) |
+| `locales/<code>.js` | **translate / add a language** (BCP 47 name) |
+
+**Add a friend** → copy a line in `content/characters.js`, change the fields. If its `species` already exists (cat, dog, owl…), that's it. Only touch `content/creatures.js` for a brand-new body shape.
 
 **Languages** → the world auto-detects the browser language (region fallback, e.g. `en-GB`→`en-US`; final fallback Italian). Toggle with the 🌐 button, or force with `?lang=en-US` / `?lang=it-IT`. Add a language by copying a file in `locales/` (named with its [BCP 47](https://en.wikipedia.org/wiki/IETF_language_tag) code, e.g. `fr-FR.js`) and adding its `<script>` tag in `index.html`.
 

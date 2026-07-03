@@ -140,18 +140,18 @@
 <div id="start"><canvas id="poster"></canvas><div id="startText"><h1>Il Mondo di Eliana</h1><p>tocca per entrare</p></div></div>
 
 <!-- versione: generata da deploy.sh (git describe) -->
-<script src="version.js"></script>
+<script src="lib/version.js"></script>
 <!-- configurazione (nome del bambino, posizione) -->
 <script src="config.js"></script>
-<!-- alba/tramonto reali (astronomia) -->
-<script src="sun.js"></script>
-<!-- contenuto editabile (lingue, personaggi, scenari, forme) -->
-<script src="languages.js"></script>
+<!-- motore "fisso" (lingue, astronomia) -->
+<script src="lib/sun.js"></script>
+<script src="lib/languages.js"></script>
 <script src="locales/it-IT.js"></script>
 <script src="locales/en-US.js"></script>
-<script src="characters.js"></script>
-<script src="environments.js"></script>
-<script src="creatures.js"></script>
+<!-- contenuto editabile (personaggi, scenari, forme) -->
+<script src="content/characters.js"></script>
+<script src="content/environments.js"></script>
+<script src="content/creatures.js"></script>
 <!-- motore -->
 <script>
 // ═══════════════════════════════════════════════════════════════════

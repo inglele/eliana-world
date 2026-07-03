@@ -23,18 +23,18 @@ fi
 # 3. versione da git → version.js
 VER="$(git describe --tags --always 2>/dev/null || echo 'v0.0-dev')"
 DATE="$(date +%Y-%m-%d)"
-cat > version.js <<JS
+cat > lib/version.js <<JS
 // GENERATO da deploy.sh — non modificare a mano. Versione da git describe.
 window.APP_VERSION = '${VER}';
 window.APP_BUILD_DATE = '${DATE}';
 JS
-echo "📦 version.js → $VER ($DATE)"
+echo "📦 lib/version.js → $VER ($DATE)"
 
-# 4. copia su Caddy (deploy live)
-mkdir -p "$CADDY/locales"
-for f in index.html version.js config.js sun.js languages.js characters.js environments.js creatures.js README.md CHANGELOG.md; do
-  cp "$f" "$CADDY/$f"
-done
+# 4. copia su Caddy (deploy live), preservando le sottocartelle
+mkdir -p "$CADDY/locales" "$CADDY/lib" "$CADDY/content"
+for f in index.html config.js README.md CHANGELOG.md; do cp "$f" "$CADDY/$f"; done
+cp lib/*.js     "$CADDY/lib/"
+cp content/*.js "$CADDY/content/"
 cp locales/*.js "$CADDY/locales/"
 echo "🚀 deployato su $CADDY"
 
