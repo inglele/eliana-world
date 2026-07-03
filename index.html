@@ -30,6 +30,8 @@
     background:rgba(255,120,120,.18); color:#ffd6d6; }
   #infoBtn { border:none; border-radius:50%; width:30px; height:30px; font-size:17px; cursor:pointer;
     background:rgba(255,255,255,.1); color:#cfe0f0; line-height:1; }
+  #langBtn { border:none; border-radius:50%; width:30px; height:30px; font-size:15px; cursor:pointer;
+    background:rgba(255,255,255,.1); color:#cfe0f0; line-height:1; }
   #clockBtn { border:none; border-radius:10px; padding:5px 9px; font-size:12px; cursor:pointer;
     background:rgba(255,255,255,.08); color:#cfe0f0; white-space:nowrap; }
   #clockBtn.auto { background:rgba(127,178,255,.32); color:#eaf2fb; }
@@ -81,6 +83,7 @@
 <div id="top" hidden>
   <div id="env"></div>
   <button id="clear" title="Svuota">🧹</button>
+  <button id="langBtn" title="Language" aria-label="Language">🌐</button>
   <button id="infoBtn" title="Gli amici" aria-label="Info">ⓘ</button>
 </div>
 
@@ -108,7 +111,8 @@
 
 <div id="start"><canvas id="poster"></canvas><div id="startText"><h1>Il Mondo di Eliana</h1><p>tocca per entrare</p></div></div>
 
-<!-- contenuto editabile (personaggi, scenari, forme) -->
+<!-- contenuto editabile (personaggi, scenari, forme, lingue) -->
+<script src="i18n.js"></script>
 <script src="characters.js"></script>
 <script src="environments.js"></script>
 <script src="creatures.js"></script>
@@ -124,7 +128,7 @@
 //  ponytail: zero dipendenze, audio sintetizzato, canvas 2D.
 //  (CAST, BYID, INFO, ENVS, curEnv, drawCreature arrivano dai file sopra.)
 // ═══════════════════════════════════════════════════════════════════
-const APP_VERSION = 'v1.1';
+const APP_VERSION = 'v1.2';
 
 // ── CANVAS ─────────────────────────────────────────────────────────
 const cv = document.getElementById('stage'); let ctx = cv.getContext('2d');
@@ -361,7 +365,7 @@ function tr(g,x1,y1,x2,y2,x3,y3,f){ g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,
 function buildEnvButtons(){
   const box=document.getElementById('env');
   Object.entries(ENVS).forEach(([k,e])=>{
-    const b=document.createElement('button'); b.className='envbtn'+(k===curEnv?' active':''); b.textContent=e.name;
+    const b=document.createElement('button'); b.className='envbtn'+(k===curEnv?' active':''); b.textContent=envName(k);
     b.addEventListener('click',()=>{ curEnv=k; applyEnvAudio();
       document.querySelectorAll('.envbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
     box.appendChild(b);
@@ -574,7 +578,7 @@ function buildInfoTable(){
     mg.restore();
     tdP.appendChild(mc);
     const tdI=document.createElement('td');
-    const info=INFO[c.id]||['',''];
+    const info=charInfo(c);
     tdI.innerHTML=`<div class="nm">${c.name}</div><div class="tp">${info[0]}</div><div class="ds">${info[1]}</div>`;
     tr.appendChild(tdP); tr.appendChild(tdI); tb.appendChild(tr);
   });
@@ -598,6 +602,19 @@ document.getElementById('start').addEventListener('click',()=>{
   st.addEventListener('transitionend', e=>{ if(e.propertyName==='opacity') st.remove(); }, {once:true});
   setTimeout(()=>st.remove(), 1200); // fallback se transitionend non scatta
 });
+
+// ── applica le stringhe della lingua attiva alla UI statica ───────
+function applyI18n(){
+  document.documentElement.lang=LANG;
+  const st=document.getElementById('startText');
+  if(st){ st.querySelector('p').textContent=L.enter; } // h1 resta "Il Mondo di Eliana" (titolo/nome)
+  document.getElementById('infoIntro').textContent=L.friendsIntro;
+  document.getElementById('clear').title=L.clear;
+  document.getElementById('infoBtn').title=L.friends;
+  phaseMenu.querySelectorAll('button').forEach(b=>{ b.textContent=L.phases[b.dataset.ph]||b.textContent; });
+}
+document.getElementById('langBtn').addEventListener('click',()=> setLang(LANG==='it'?'en':'it'));
+applyI18n();
 
 // disegna il poster all'avvio (e lo ridisegna se ruoti/ridimensioni prima di entrare)
 drawPoster();
