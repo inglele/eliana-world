@@ -152,20 +152,26 @@ addEventListener('resize',resize); resize();
 // ── hover (mouse) + tap (touch): mostra il nome dell'animale ───────
 cv.addEventListener('mousemove',e=>{
   const r=cv.getBoundingClientRect();
-  hoverBeing=beingAt((e.clientX-r.left)*DPR,(e.clientY-r.top)*DPR);
+  const px=(e.clientX-r.left)*DPR, py=(e.clientY-r.top)*DPR;
+  hoverBeing=beingAt(px,py);
+  hoverAstro = !hoverBeing && ((px-astro.x)**2+(py-astro.y)**2 < (astro.r*1.3)**2);
   hoverClearT=0;
 });
-cv.addEventListener('mouseleave',()=>{ hoverBeing=null; });
+cv.addEventListener('mouseleave',()=>{ hoverBeing=null; hoverAstro=false; });
 cv.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse') return; // il mouse usa hover
   const r=cv.getBoundingClientRect();
-  const hit=beingAt((e.clientX-r.left)*DPR,(e.clientY-r.top)*DPR);
+  const px=(e.clientX-r.left)*DPR, py=(e.clientY-r.top)*DPR;
+  const hit=beingAt(px,py);
   if(hit){ hoverBeing=hit; hoverClearT=performance.now()+2000; } // nome per 2s
+  else if((px-astro.x)**2+(py-astro.y)**2 < (astro.r*1.3)**2){ hoverAstro=true; hoverClearT=performance.now()+2000; }
 });
 
 let day=0.8;
 const beings=[];
 let hoverBeing=null, hoverClearT=0;
+let hoverAstro=false;
+const astro={x:0,y:0,r:0};
 // hit-test: trova l'animale sotto il punto (coord canvas già in DPR)
 function beingAt(px,py){
   for(let i=beings.length-1;i>=0;i--){ const b=beings[i];
@@ -255,6 +261,7 @@ function draw(){
   const t=performance.now()/1000;
   // astro: sole di giorno, luna di notte
   const ax=W*0.82, ay=H*0.15, ar=26*DPR;
+  astro.x=ax; astro.y=ay; astro.r=ar;   // per l'hit-test dell'hover
   // "ora" percepita per colorare l'astro: reale se auto, stimata dallo slider se manuale
   const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
   if(dn>0.5){
@@ -318,6 +325,15 @@ function draw(){
     ctx.strokeText(b.name, b.x, b.y - s*1.9);
     ctx.fillStyle='#fff'; ctx.fillText(b.name, b.x, b.y - s*1.9);
   }
+  // etichetta sole/luna su hover
+  if(hoverAstro && L){
+    const label = dn>0.5 ? (L.moon||'Luna') : (L.sun||'Sole');
+    ctx.font=`700 ${Math.round(13*DPR)}px system-ui,sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.lineWidth=Math.max(2,3*DPR); ctx.strokeStyle='rgba(0,0,0,.72)'; ctx.lineJoin='round';
+    ctx.strokeText(label, astro.x, astro.y + astro.r + 6*DPR);
+    ctx.fillStyle='#fff'; ctx.fillText(label, astro.x, astro.y + astro.r + 6*DPR);
+  }
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
@@ -329,7 +345,7 @@ function hexA(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${n>>16&25
 let last=performance.now();
 function loop(now){
   const dt=Math.min(50,now-last); last=now;
-  if(hoverClearT && now>hoverClearT){ hoverBeing=null; hoverClearT=0; } // scade il tap-label
+  if(hoverClearT && now>hoverClearT){ hoverBeing=null; hoverAstro=false; hoverClearT=0; } // scade il tap-label
   const wantSleep=day<0.35?1:(day<0.5?(0.5-day)/0.15:0);
   for(const b of beings){ b.sleep+=(wantSleep-b.sleep)*0.02; stepBeing(b,dt); }
   if(ambGain){ const base=ENVS[curEnv].amb.g; ambGain.gain.value=base+(1-day)*0.04; }

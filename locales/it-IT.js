@@ -15,6 +15,8 @@ I18N['it-IT'] = {
   friends: 'Gli amici',
   friendsIntro: 'Gli amici che vivono nel mondo:',
   clockTitle: 'Che ore sono?',
+  sun: 'Sole',
+  moon: 'Luna',
   phases: { alba:'🌅 Alba', giorno:'🌞 Giorno', tramonto:'🌇 Tramonto', notte:'🌙 Notte', auto:'🕒 Auto (ora reale)' },
   envs: { acqua:'🌊 Laghetto', foresta:'🌲 Foresta', spiaggia:'🏖 Spiaggia', parco:'🌳 Parco', casa:'🏠 Casa' },
   chars: {
