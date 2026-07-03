@@ -141,8 +141,10 @@
 
 <!-- versione: generata da deploy.sh (git describe) -->
 <script src="version.js"></script>
-<!-- configurazione (nome del bambino, ecc.) -->
+<!-- configurazione (nome del bambino, posizione) -->
 <script src="config.js"></script>
+<!-- alba/tramonto reali (astronomia) -->
+<script src="sun.js"></script>
 <!-- contenuto editabile (lingue, personaggi, scenari, forme) -->
 <script src="languages.js"></script>
 <script src="locales/it-IT.js"></script>
@@ -290,7 +292,10 @@ function draw(){
   astro.x=ax; astro.y=ay; astro.r=ar;   // per l'hit-test dell'hover
   // "ora" percepita per colorare l'astro: reale se auto, stimata dallo slider se manuale
   const hr = curHour; // ora reale (il mondo segue sempre l'orologio)
-  const isNight = (hr>=21 || hr<6);   // luna solo di notte vera; alba/tramonto = sole
+  // notte: da sun.js se disponibile (e non in modalità debug fase), altrimenti soglia fissa
+  let isNight;
+  if(forceDay===null && typeof solarDay==='function'){ const sd=solarDay(new Date()); isNight = sd ? sd.isNight : (hr>=21||hr<6); }
+  else isNight = (hr>=21 || hr<6);
   astro.night=isNight;
   if(isNight){
     // LUNA: gialla la sera (18-22) e verso l'alba (4-6), bianca a notte fonda
@@ -444,12 +449,15 @@ const PHASES={ alba:[0.5,6.5], giorno:[1,12], tramonto:[0.45,19.5], notte:[0,2] 
 function dayFromClock(){
   if(forceDay!==null) return PHASES[forceDay][0];
   const now=new Date();
+  const sd = (typeof solarDay==='function') ? solarDay(now) : null;
+  if(sd) return sd.day;              // alba/tramonto REALI (sun.js + config)
+  // fallback soglie fisse se manca config/sun.js
   const h=now.getHours()+now.getMinutes()/60;
   let d;
   if(h<5||h>=22) d=0;
-  else if(h<8)  d=(h-5)/3;        // alba 5→8
-  else if(h<18) d=1;              // pieno giorno
-  else if(h<22) d=1-(h-18)/4;    // tramonto 18→22
+  else if(h<8)  d=(h-5)/3;
+  else if(h<18) d=1;
+  else if(h<22) d=1-(h-18)/4;
   else d=0;
   return Math.max(0,Math.min(1,d));
 }
