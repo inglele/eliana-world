@@ -316,7 +316,7 @@ function draw(){
     ctx.fillRect(ax-ar,ay-ar,ar*2,ar*2);                     // disco luna
     const skg=ctx.createLinearGradient(0,0,0,H*BASE.horizon); skg.addColorStop(0,rgb(top)); skg.addColorStop(1,rgb(bot));
     ctx.fillStyle=skg;
-    ctx.beginPath(); ctx.arc(ax+ar*0.55,ay-ar*0.20,ar*0.95,0,6.29); ctx.fill();  // morso = colore cielo
+    ctx.beginPath(); ctx.arc(ax+ar*0.5,ay-ar*0.18,ar*1.06,0,6.29); ctx.fill();  // morso = colore cielo (leggermente più grande = niente bordino 1px)
     ctx.restore();
   } else {
     // SOLE: alba giallo chiaro → mezzogiorno giallo pieno → tramonto rosso
