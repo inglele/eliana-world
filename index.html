@@ -327,15 +327,16 @@ function draw(){
   }
   // ===== ELEMENTI NATURA (layer fissi, combinabili) =====
   const H0=H*BASE.horizon;
-  // MONTAGNE (dietro l'orizzonte, in fondo)
+  // MONTAGNE (in alto, lontane sullo sfondo del cielo)
   if(LAYERS.montagne.on){
     const mc=mix([120,130,150],[30,40,66],dn);
-    const peaks=[[0.12,0.20],[0.30,0.32],[0.52,0.24],[0.72,0.34],[0.90,0.22]];
+    const mBase=H0;   // base sull'orizzonte; picchi più alti = montagne che svettano nel cielo
+    const peaks=[[0.12,0.34],[0.30,0.52],[0.52,0.40],[0.72,0.56],[0.90,0.38]];
     for(const p of peaks){ const x=p[0]*W, hh=H0*p[1];
       ctx.fillStyle=rgb(mc);
-      ctx.beginPath(); ctx.moveTo(x-hh*1.3,H0); ctx.lineTo(x,H0-hh); ctx.lineTo(x+hh*1.3,H0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x-hh*1.1,mBase); ctx.lineTo(x,mBase-hh); ctx.lineTo(x+hh*1.1,mBase); ctx.closePath(); ctx.fill();
       ctx.fillStyle=`rgba(255,255,255,${0.5-0.3*dn})`;
-      ctx.beginPath(); ctx.moveTo(x-hh*0.3,H0-hh*0.75); ctx.lineTo(x,H0-hh); ctx.lineTo(x+hh*0.3,H0-hh*0.75); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x-hh*0.3,mBase-hh*0.75); ctx.lineTo(x,mBase-hh); ctx.lineTo(x+hh*0.3,mBase-hh*0.75); ctx.closePath(); ctx.fill();
     }
   }
   // PRATO base (terra)
