@@ -84,11 +84,20 @@ function drawCreature(c, sz){
   } else {
     ell(0,0,s*0.9,s*0.7,body);   // fallback: corpo generico
   }
-  // occhi (tranne gufo/bruco) — due occhi frontali, chiusi se dorme
-  if(S!=='owl' && S!=='caterpillar'){
+  // occhi: frontali (2 occhi) vs di profilo (1 occhio). Gufo ha i suoi, bruco nessuno.
+  const FRONTAL = ['cat','dog','wolf','gorilla','monkey','bear','cow'];
+  const PROFILE = ['horse','croc','hedgehog','squirrel'];
+  if(FRONTAL.includes(S)){
     if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08); ctx.lineCap='round';
       ctx.beginPath(); ctx.moveTo(-s*0.32,-s*0.1); ctx.lineTo(-s*0.10,-s*0.1); ctx.stroke();
       ctx.beginPath(); ctx.moveTo( s*0.10,-s*0.1); ctx.lineTo( s*0.32,-s*0.1); ctx.stroke(); }
     else { ell(-s*0.22,-s*0.12,s*0.1,s*0.12,'#182530'); ell(s*0.22,-s*0.12,s*0.1,s*0.12,'#182530'); }
+  } else if(PROFILE.includes(S)){
+    // occhio singolo verso il muso (lato destro, dove guarda)
+    const ex = (S==='horse'||S==='croc') ? s*0.85 : s*0.3;
+    const ey = (S==='horse') ? -s*0.6 : (S==='croc') ? s*0.0 : -s*0.1;
+    if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08); ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(ex-s*0.12,ey); ctx.lineTo(ex+s*0.12,ey); ctx.stroke(); }
+    else { ell(ex,ey,s*0.1,s*0.12,'#182530'); }
   }
 }
