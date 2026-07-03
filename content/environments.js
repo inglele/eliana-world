@@ -15,7 +15,7 @@ const BASE = {
   skyNight: [[8,16,38],[16,28,58]],
   groundDay:  [96,165,92],
   groundNight:[16,40,26],
-  horizon: 0.62,   // frazione di altezza dove finisce il cielo e inizia il prato
+  horizon: 0.45,   // frazione di altezza dove finisce il cielo e inizia il prato (più basso = più prato per gli animali)
 };
 
 // Elementi natura (ordine = ordine interruttori). key usato in personaggi (campo env) e audio.
