@@ -88,7 +88,9 @@ function drawCreature(c, sz){
   const FRONTAL = ['cat','dog','wolf','gorilla','monkey','bear','cow'];
   const PROFILE = ['horse','croc','hedgehog','squirrel'];
   if(FRONTAL.includes(S)){
-    const ey=-s*0.42;   // occhi in alto sulla faccia, NON sul muso
+    // altezza occhi per specie (alcune facce sono più in alto di altre)
+    const EYEY={bear:-0.42, gorilla:-0.3, monkey:-0.28, cat:-0.35, dog:-0.28, wolf:-0.3, cow:-0.12};
+    const ey=s*(EYEY[S]!==undefined?EYEY[S]:-0.3);
     if(sleeping){ ctx.strokeStyle='#12202a'; ctx.lineWidth=Math.max(1,s*0.08); ctx.lineCap='round';
       ctx.beginPath(); ctx.moveTo(-s*0.32,ey); ctx.lineTo(-s*0.10,ey); ctx.stroke();
       ctx.beginPath(); ctx.moveTo( s*0.10,ey); ctx.lineTo( s*0.32,ey); ctx.stroke(); }
