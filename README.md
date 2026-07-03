@@ -44,7 +44,7 @@ The content lives in plain `.js` files anyone can edit — no build step:
 | `characters.js` | the 21 friends (name, type, colours, movement, sound, description) | **add / change an animal** |
 | `environments.js` | the scenes (pond / forest / beach / park / home: sky + ambient) | **add / change a scene** |
 | `creatures.js` | the body shapes per species (`drawCreature`) | **add a new body type** |
-| `i18n.js` + `locales/<code>.js` | UI strings + character type/description, one file per language | **translate / add a language** |
+| `languages.js` + `locales/<code>.js` | language engine + strings, one file per language | **translate / add a language** |
 | `index.html` | the engine (audio, movement, clock, render loop) | rarely |
 
 **Add a friend** → copy a line in `characters.js`, change the fields. If its `species` already exists (cat, dog, owl…), that's it. Only touch `creatures.js` if you want a brand-new body shape.

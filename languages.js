@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-//  i18n — loader lingue (Il Mondo di Eliana)
+//  languages.js — motore lingue (Il Mondo di Eliana)
 //  Le stringhe stanno nei file locales/<codice BCP 47>.js (es. it-IT.js, en-US.js),
 //  che si registrano dentro l'oggetto I18N. Questo file sceglie la lingua attiva.
 //  Deve essere caricato PRIMA dei file locales/*.js in index.html.
