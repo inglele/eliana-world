@@ -41,13 +41,39 @@ function sunTimes(date, lat, lon){
   return { sunrise: wrap(rUT), sunset: wrap(sUT) };
 }
 
+// stima lat/long SENZA chiedere permessi: config → fuso del browser → offset.
+// Tabella piccola "good enough" (fuso IANA → coordinate città). Non serve precisione.
+const TZ_COORDS = {
+  'Europe/Rome':[41.9,12.5], 'Europe/Paris':[48.85,2.35], 'Europe/Madrid':[40.4,-3.7],
+  'Europe/Berlin':[52.5,13.4], 'Europe/London':[51.5,-0.1], 'Europe/Amsterdam':[52.37,4.9],
+  'Europe/Lisbon':[38.7,-9.1], 'Europe/Athens':[38.0,23.7], 'Europe/Warsaw':[52.2,21.0],
+  'Europe/Moscow':[55.75,37.6], 'Europe/Istanbul':[41.0,28.9], 'Europe/Zurich':[47.4,8.5],
+  'America/New_York':[40.7,-74.0], 'America/Chicago':[41.85,-87.65], 'America/Denver':[39.7,-105.0],
+  'America/Los_Angeles':[34.05,-118.2], 'America/Toronto':[43.65,-79.4], 'America/Sao_Paulo':[-23.55,-46.6],
+  'America/Mexico_City':[19.4,-99.1], 'Asia/Tokyo':[35.7,139.7], 'Asia/Shanghai':[31.2,121.5],
+  'Asia/Kolkata':[28.6,77.2], 'Asia/Dubai':[25.2,55.3], 'Asia/Singapore':[1.35,103.8],
+  'Australia/Sydney':[-33.87,151.2], 'Pacific/Auckland':[-36.85,174.8], 'Africa/Johannesburg':[-26.2,28.0],
+  'Africa/Cairo':[30.0,31.2],
+};
+function guessLatLon(date){
+  // 1) config esplicito
+  if(typeof CONFIG!=='undefined' && CONFIG.latitude!=null && CONFIG.longitude!=null)
+    return [CONFIG.latitude, CONFIG.longitude];
+  // 2) nome fuso del browser → tabella
+  try{ const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if(tz && TZ_COORDS[tz]) return TZ_COORDS[tz]; }catch(e){}
+  // 3) fallback: longitudine da offset, latitudine 45°N (nord medio)
+  const off=-date.getTimezoneOffset()/60;
+  return [45, off*15];
+}
+
 // day (1=giorno pieno, 0=notte) e isNight dall'ora reale + alba/tramonto veri.
 // Transizioni morbide di ~1h attorno ad alba e tramonto.
 function solarDay(now){
-  const lat=(typeof CONFIG!=='undefined'&&CONFIG.latitude), lon=(typeof CONFIG!=='undefined'&&CONFIG.longitude);
-  const st = (lat!=null && lon!=null) ? sunTimes(now, lat, lon) : null;
+  const [lat, lon] = guessLatLon(now);
+  const st = sunTimes(now, lat, lon);
   const h = now.getHours()+now.getMinutes()/60;
-  if(!st) return null;                          // niente config → il chiamante usa il fallback
+  if(!st) return null;                          // sole polare estremo → il chiamante usa il fallback
   const {sunrise, sunset}=st;
   const tw=1.0;                                 // durata crepuscolo (ore) per la sfumatura
   let day;

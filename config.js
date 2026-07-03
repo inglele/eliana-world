@@ -7,7 +7,9 @@
 
 const CONFIG = {
   childName: 'Eliana',   // il nome del bambino/a → appare nel titolo e nel testo
-  // posizione per calcolare alba/tramonto reali (Aquileia, IT). Cambia col tuo luogo.
+  // Posizione per alba/tramonto reali. OPZIONALE: se le lasci a null, viene
+  // stimata dal fuso orario del browser (nessun permesso richiesto).
+  // Qui sono impostate su Aquileia (IT) per la massima precisione locale.
   latitude: 45.79,
   longitude: 13.37,
 };
