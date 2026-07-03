@@ -294,6 +294,23 @@ function draw(){
   const g=ctx.createLinearGradient(0,0,0,H*BASE.horizon); g.addColorStop(0,rgb(top)); g.addColorStop(1,rgb(bot));
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H*BASE.horizon);
   const t=performance.now()/1000;
+  // NUVOLE che scorrono lente nel cielo (riempiono lo spazio, si diradano di notte)
+  const cloudA=0.85-dn*0.7;
+  if(cloudA>0.04){
+    ctx.fillStyle=`rgba(255,255,255,${cloudA})`;
+    const clouds=[[0.0,0.12,1.0],[0.0,0.26,0.7],[0.0,0.18,1.3]];
+    for(let ci=0; ci<clouds.length; ci++){ const c=clouds[ci];
+      const speed=6+ci*4, cw=W*0.16*c[2];
+      let cxp=((c[0]+ t*speed/W*10) % 1.3 - 0.15); // scorre e ricicla
+      const cx=cxp*W, cy=H*c[1];
+      // nuvola = 3 bolle sovrapposte
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,cw*0.6,cw*0.32,0,0,6.2832);
+      ctx.ellipse(cx+cw*0.5,cy+cw*0.05,cw*0.5,cw*0.28,0,0,6.2832);
+      ctx.ellipse(cx-cw*0.5,cy+cw*0.06,cw*0.45,cw*0.26,0,0,6.2832);
+      ctx.fill();
+    }
+  }
   // astro: sole di giorno, luna di notte
   const ax=W*0.82, ay=H*0.15, ar=26*DPR;
   astro.x=ax; astro.y=ay; astro.r=ar;   // per l'hit-test dell'hover
