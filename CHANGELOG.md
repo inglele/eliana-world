@@ -4,6 +4,40 @@ All notable changes to **Il Mondo di Eliana**.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 Versions are derived from git tags via `deploy.sh` (`git describe`).
 
+## [v1.4] — 2026-07-03
+
+### Living landscape (layered environments)
+- The world is now **one place** (sky + ground + horizon) with natural elements you
+  toggle on/off and **combine**: mountains, forest, pond, sea, flowers.
+- Ambient sound is the **sum** of the active elements.
+- Everything is animated: **drifting clouds**, swaying trees, water ripples, swaying flowers.
+- Coherent **water system**: a pond up on the left feeds a **river** that flows down;
+  turn the sea on and the river simply runs beneath it (fixed course, natural layering).
+- Animals roam on the **meadow** (no more floating creatures above the trees).
+
+### Clock helper
+- Tap the mantel clock to open it **big and centred**; **Momo the owl** says the time
+  out loud — now with the correct voice per language (falls back to the written bubble
+  if no matching voice is installed).
+
+### Day / night
+- Real **astronomical** sunrise/sunset; location taken from `config.js` **or estimated
+  from the browser timezone** (no geolocation permission).
+- Sun/moon decided by the real hour (sunset shows a red sun, not the moon).
+- Hover the sun/moon to see its name.
+
+### Polish
+- Friends get **two eyes** when front-facing, one in profile; eyes close during sleep.
+- A soft **glow** pulses around a friend when it makes its sound.
+- Language follows the **browser** (no persisted choice); flag button to switch.
+- Title translates with the child's name (config).
+
+### Project
+- Reorganised into folders: `config.js`, `content/`, `locales/`, `lib/`.
+- Version derived from git via `deploy.sh`; `Cache-Control: no-cache` so updates show
+  without a hard refresh.
+- Homepage screenshot + this changelog.
+
 ## [v1.3] — 2026-07-03
 
 First public release. Everything below was built in the initial session.
@@ -61,7 +95,4 @@ First public release. Everything below was built in the initial session.
 - Triple-tap the corner clock → phase menu (dawn / day / sunset / night / auto).
 
 ## Unreleased / planned
-- **Layered environments**: one base world (ground + sky) with natural elements you can
-  toggle per zone (forest right, sea below, pond left, mountains behind) instead of
-  mutually-exclusive scenes — with gentle animations (swaying trees, drifting clouds).
 - Real CC0 audio samples in place of synthesised sound.
