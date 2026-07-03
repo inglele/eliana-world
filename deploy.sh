@@ -32,7 +32,7 @@ echo "📦 version.js → $VER ($DATE)"
 
 # 4. copia su Caddy (deploy live)
 mkdir -p "$CADDY/locales"
-for f in index.html version.js config.js sun.js languages.js characters.js environments.js creatures.js README.md; do
+for f in index.html version.js config.js sun.js languages.js characters.js environments.js creatures.js README.md CHANGELOG.md; do
   cp "$f" "$CADDY/$f"
 done
 cp locales/*.js "$CADDY/locales/"

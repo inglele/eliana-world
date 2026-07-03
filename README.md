@@ -106,6 +106,10 @@ The version shown in the info panel is **derived from git** (no manual bumping):
 
 *(From the book "Paws, Purrs and Tales", characters invented by Eliana.)*
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the list of features and changes.
+
 ## License
 
 [MIT](LICENSE) — do what you like, just keep the notice.
