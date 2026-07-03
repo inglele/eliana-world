@@ -359,22 +359,13 @@ function draw(){
   // PRATO base (terra)
   const gc=mix(BASE.groundDay,BASE.groundNight,dn);
   ctx.fillStyle=rgb(gc); ctx.fillRect(0,H0,W,H-H0);
-  // ===== SISTEMA ACQUA (laghetto → fiume → mare, coerente) =====
+  // ===== SISTEMA ACQUA (laghetto → fiume → mare) =====
   const waterCol=mix([80,155,205],[11,30,63],dn);
   const seaTop=H*0.82;
-  const seaOn=LAYERS.mare.on;
-  // MARE (fascia bassa) — disegnato per primo così il fiume ci sfocia dentro
-  if(seaOn){
-    ctx.fillStyle=rgb(waterCol); ctx.fillRect(0,seaTop,W,H-seaTop);
-    ctx.strokeStyle=`rgba(255,255,255,${0.08+0.06*dn})`; ctx.lineWidth=1*DPR;
-    for(const rp of ripples){ const yy=seaTop+(H-seaTop)*rp.y+Math.sin(t*rp.sp*6+rp.x*9)*4*DPR;
-      ctx.beginPath(); for(let x=0;x<=W;x+=16*DPR){ const y=yy+Math.sin(x/W*8+t*rp.sp*4+rp.x*10)*3*DPR; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
-  }
-  // LAGHETTO (in alto a sinistra) + FIUME che scende
+  // LAGHETTO (in alto a sinistra) + FIUME che scende — disegnati PRIMA
   if(LAYERS.laghetto.on){
     const lx=W*0.28, ly=H0+H*0.06, lrx=W*0.15, lry=H*0.055;
-    const riverEnd = seaOn ? seaTop+H*0.01 : H;   // sfocia nel mare, o esce dallo schermo
-    // FIUME: corso FISSO che scende dal laghetto (i fiumi non cambiano corso nel tempo)
+    const riverEnd = H;   // il fiume arriva SEMPRE in fondo; il mare (se attivo) gli va sopra
     const rw=W*0.05;
     ctx.fillStyle=rgb(waterCol);
     ctx.beginPath();
@@ -387,6 +378,14 @@ function draw(){
     ctx.strokeStyle=`rgba(255,255,255,${0.10+0.06*dn})`; ctx.lineWidth=1*DPR;
     for(let i=1;i<=3;i++){ const ry2=lry*(i/4)+Math.sin(t*0.8+i)*1.5*DPR;
       ctx.beginPath(); ctx.ellipse(lx,ly,lrx*(i/4)*1.4,ry2,0,0,6.2832); ctx.stroke(); }
+  }
+  // MARE (fascia bassa) — disegnato DOPO: copre la fine del fiume senza modificarlo
+  if(LAYERS.mare.on){
+    ctx.fillStyle=rgb(waterCol); ctx.fillRect(0,seaTop,W,H-seaTop);
+    ctx.strokeStyle=`rgba(255,255,255,${0.08+0.06*dn})`; ctx.lineWidth=1*DPR;
+    for(const rp of ripples){ const yy=seaTop+(H-seaTop)*rp.y+Math.sin(t*rp.sp*6+rp.x*9)*4*DPR;
+      ctx.beginPath(); for(let x=0;x<=W;x+=16*DPR){ const y=yy+Math.sin(x/W*8+t*rp.sp*4+rp.x*10)*3*DPR; x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);} ctx.stroke(); }
+  }
   }
   // BOSCO (alberi a destra, ondeggiano)
   if(LAYERS.bosco.on){
